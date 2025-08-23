@@ -1,0 +1,81 @@
+{
+  "name": "nooxy",
+  "version": "0.0.0-development",
+  "description": "nooxy is a free and powerful Notion Reverse Proxy.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/draphy/nooxy"
+  },
+  "homepage": "https://github.com/draphy/nooxy",
+  "bugs": {
+    "url": "https://github.com/draphy/nooxy/issues"
+  },
+  "keywords": [
+    "Notion",
+    "Cloudflare",
+    "Workers",
+    "Hosting",
+    "Reverse Proxy",
+    "Proxy"
+  ],
+  "author": {
+    "name": "David Raphi",
+    "email": "davidraphi@proton.me"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "init": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "prebuild": "node build-body-js-string.js",
+    "build": "npm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist && npm run build:cli",
+    "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli",
+    "biome:lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "biome:format": "biome format .",
+    "format:fix": "biome format --write .",
+    "biome:check": "biome check .",
+    "biome:fix": "biome check --write .",
+    "type:check": "tsc  --noEmit",
+    "commit:check": "pnpm biome:check && pnpm type:check && pnpm build",
+    "semantic-release": "semantic-release"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^3.3.2",
+    "chalk": "^5.6.0",
+    "change-case-all": "^2.1.0",
+    "commander": "^11.1.0",
+    "ejs": "^3.1.10",
+    "htmlrewriter": "^0.0.7",
+    "is-valid-domain": "^0.1.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@cloudflare/workers-types": "^4.20250822.0",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/npm": "^11.0.3",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "@types/node": "^22.17.2",
+    "semantic-release": "^24.2.7",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
+}
