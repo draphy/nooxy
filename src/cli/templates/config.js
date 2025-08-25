@@ -5,7 +5,7 @@ const  {HEAD_CSS_STRING}= require("./generated/head-css-string.js")
 // Set this to your Google Tag ID from Google Analytics
 const GOOGLE_TAG_ID = ''
 
-/** @type {import('nooxy').NoteHostSiteConfig} */
+/** @type {import('nooxy').NooxySiteConfig} */
 const SITE_CONFIG = {
   domain: 'your-domain.com',
 
