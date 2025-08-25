@@ -1,6 +1,6 @@
-const {googleTag} = require('nooxy')
-const  {BODY_JS_STRING}= require("./generated/body-js-string.js")
-const  {HEAD_CSS_STRING}= require("./generated/head-css-string.js")
+import { googleTag } from 'nooxy'
+import { BODY_JS_STRING } from './generated/body-js-string.js'
+import { HEAD_CSS_STRING } from './generated/head-css-string.js'
 
 // Set this to your Google Tag ID from Google Analytics
 const GOOGLE_TAG_ID = ''
