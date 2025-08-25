@@ -10,7 +10,7 @@ try {
   const bodyJsContent = fs.readFileSync(BODY_JS_FILE, 'utf8')
 
   // Create the TypeScript content
-  const tsContent = `export const BODY_JS_STRING = \`${bodyJsContent}\``
+  const tsContent = `export const BODY_JS_STRING = \`${bodyJsContent.replace(/`/g, '\u0060')}\`\n`
 
   // Write to the output file
   fs.writeFileSync(OUT_FILE, tsContent, 'utf8')

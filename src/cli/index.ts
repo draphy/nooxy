@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
 import { init } from './init'
+import { generate } from './generate'
 
 const command = process.argv[2]
 
 switch (command) {
   case 'init': {
     init()
+    generate()
     break
   }
   case 'generate': {
-    console.log('This is generate')
+    generate()
     break
   }
   default:
