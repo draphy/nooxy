@@ -9,6 +9,9 @@
 		"test": "vitest",
 		"cf-typegen": "wrangler types"
 	},
+	"dependencies": {
+		"nooxy": "file:../../"
+	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
 		"typescript": "^5.5.2",
