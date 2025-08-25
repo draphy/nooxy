@@ -57,22 +57,16 @@
     "semantic-release": "semantic-release"
   },
   "dependencies": {
-    "@inquirer/prompts": "^3.3.2",
-    "chalk": "^5.6.0",
-    "change-case-all": "^2.1.0",
-    "commander": "^11.1.0",
-    "ejs": "^3.1.10",
-    "htmlrewriter": "^0.0.7",
-    "is-valid-domain": "^0.1.6"
+    "htmlrewriter": "^0.0.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@cloudflare/workers-types": "^4.20250822.0",
+    "@cloudflare/workers-types": "^4.20250823.0",
     "@semantic-release/commit-analyzer": "^11.1.0",
     "@semantic-release/github": "^9.2.6",
     "@semantic-release/npm": "^11.0.3",
     "@semantic-release/release-notes-generator": "^12.1.0",
-    "@types/node": "^22.17.2",
+    "@types/node": "^22.18.0",
     "semantic-release": "^24.2.7",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"

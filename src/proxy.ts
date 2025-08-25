@@ -7,14 +7,33 @@ import {
   handleSitemap,
   handleNotionAsset,
   handleFavicon,
-} from './handlers/index'
-import { siteConfig } from './reverse-proxy-init'
+} from './handlers'
+import { ConfigManager } from './helpers/config-loader'
+import { NooxySiteConfigFull } from './types'
 
-export async function reverseProxy(request: Request) {
-  if (!siteConfig) {
-    throw new Error('Site config is not initialized. Please call initializeReverseProxy() first.')
+export function initializeNooxy(
+  options?: string | { configKey?: string; configPath?: string },
+): (request: Request) => Promise<Response> {
+  let configKey = 'default'
+  let configPath: string | undefined
+
+  if (typeof options === 'string') {
+    // If string passed, treat as configPath
+    configPath = options
+  } else if (options) {
+    configKey = options.configKey || 'default'
+    configPath = options.configPath
   }
 
+  const configManager = ConfigManager.getInstance(configKey, configPath)
+
+  return async (request: Request): Promise<Response> => {
+    const siteConfig = await configManager.getConfig()
+    return reverseProxy(request, siteConfig)
+  }
+}
+
+async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): Promise<Response> {
   const { domain, slugToPage, siteIcon } = siteConfig
 
   if (request.method === 'OPTIONS') {
