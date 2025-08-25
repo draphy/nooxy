@@ -44,7 +44,7 @@
   },
   "scripts": {
     "prebuild": "node build-body-js-string.js",
-    "build": "npm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist && npm run build:cli",
+    "build": "pnpm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist",
     "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli",
     "biome:lint": "biome lint .",
     "lint:fix": "biome lint --write .",
