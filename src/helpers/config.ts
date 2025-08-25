@@ -1,4 +1,7 @@
 export function googleTag(googleTagId: string) {
+  if (googleTagId.trim().length === 0) {
+    return ''
+  }
   return `
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=${googleTagId}"></script>
