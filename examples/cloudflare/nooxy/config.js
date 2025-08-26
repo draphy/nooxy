@@ -6,7 +6,7 @@ import { HEAD_CSS_STRING } from './generated/head-css-string.js'
 const GOOGLE_TAG_ID = ''
 
 /** @type {import('nooxy').NooxySiteConfig} */
-const SITE_CONFIG = {
+export const SITE_CONFIG = {
   domain: 'your-domain.com',
 
   // Metatags, optional
@@ -69,5 +69,3 @@ const SITE_CONFIG = {
   customHeadJS: googleTag(GOOGLE_TAG_ID), // Add your Google Tag ID here if needed
   customBodyJS: BODY_JS_STRING, // Add your custom body script here if needed
 }
-
-module.exports = SITE_CONFIG

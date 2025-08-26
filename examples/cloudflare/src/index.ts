@@ -12,7 +12,8 @@
  */
 
 import { initializeNooxy } from 'nooxy'
-const proxy = initializeNooxy()
+import {SITE_CONFIG} from '../nooxy/config'
+const proxy = initializeNooxy(SITE_CONFIG)
 export default {
 	async fetch(request): Promise<Response> {
 		return await proxy(request) ;
