@@ -9,26 +9,25 @@ import {
   handleFavicon,
 } from './handlers'
 import { ConfigManager } from './helpers/config-loader'
-import { NooxySiteConfigFull } from './types'
+import { NooxySiteConfig, NooxySiteConfigFull } from './types'
 
 export function initializeNooxy(
-  options?: string | { configKey?: string; configPath?: string },
+  options: NooxySiteConfig | { configKey?: string; config: NooxySiteConfig },
 ): (request: Request) => Promise<Response> {
   let configKey = 'default'
-  let configPath: string | undefined
+  let config: NooxySiteConfig
 
-  if (typeof options === 'string') {
-    // If string passed, treat as configPath
-    configPath = options
-  } else if (options) {
+  if ('configKey' in options && 'config' in options) {
     configKey = options.configKey || 'default'
-    configPath = options.configPath
+    config = options.config
+  } else {
+    config = options as NooxySiteConfig
   }
 
-  const configManager = ConfigManager.getInstance(configKey, configPath)
+  const configManager = ConfigManager.getInstance(config, configKey)
 
   return async (request: Request): Promise<Response> => {
-    const siteConfig = await configManager.getConfig()
+    const siteConfig = configManager.getConfig()
     return reverseProxy(request, siteConfig)
   }
 }
