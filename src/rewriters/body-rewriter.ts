@@ -3,9 +3,11 @@ import { BODY_JS_STRING } from './_body-js-string'
 
 export class BodyRewriter {
   siteConfig: NooxySiteConfigFull
+  protocol: string
 
-  constructor(siteConfig: NooxySiteConfigFull) {
+  constructor(siteConfig: NooxySiteConfigFull, protocol: string) {
     this.siteConfig = siteConfig
+    this.protocol = protocol
   }
 
   element(element: Element) {
@@ -15,7 +17,7 @@ export class BodyRewriter {
       `
       <script>
       const domain = '${domain}';
-      window.CONFIG.domainBaseUrl = 'https://${domain}';
+      window.CONFIG.domainBaseUrl = '${this.protocol}//${domain}';
       const SLUG_TO_PAGE = ${JSON.stringify(slugToPage)};
       const PAGE_TO_SLUG = ${JSON.stringify(pageToSlug)};
       const slugs = ${JSON.stringify(slugs)};

@@ -2,15 +2,15 @@ import { NooxySiteConfigFull } from '../types'
 
 export class MetaRewriter {
   siteConfig: NooxySiteConfigFull
-
   url: URL
-
   isRootPage: boolean
+  protocol: string
 
-  constructor(siteConfig: NooxySiteConfigFull, url: URL) {
+  constructor(siteConfig: NooxySiteConfigFull, url: URL, protocol: string) {
     this.siteConfig = siteConfig
     this.url = url
     this.isRootPage = this.siteConfig.pageToSlug[this.url.pathname.slice(1)] === ''
+    this.protocol = protocol
   }
 
   element(element: Element) {
@@ -54,11 +54,11 @@ export class MetaRewriter {
 
     if (property === 'og:url' || name === 'twitter:url') {
       if (this.isRootPage) {
-        element.setAttribute('content', `https://${domain}/`)
+        element.setAttribute('content', `${this.protocol}//${domain}/`)
       } else if (pageToSlug[page]) {
-        element.setAttribute('content', `https://${domain}/${pageToSlug[page]}`)
+        element.setAttribute('content', `${this.protocol}//${domain}/${pageToSlug[page]}`)
       } else {
-        element.setAttribute('content', `https://${domain}/${page}`)
+        element.setAttribute('content', `${this.protocol}//${domain}/${page}`)
       }
     }
 

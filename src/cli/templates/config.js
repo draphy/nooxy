@@ -29,10 +29,10 @@ export const SITE_CONFIG = {
   // Empty slug is your main page
   slugToPage: {
     '': 'NOTION_HOME_PAGE_ID',
-    contact: 'NOTION_PAGE_ID',
-    about: 'NOTION_PAGE_ID',
-    // Hint: you can use '/' in slug name to create subpages
-    'about/people': 'NOTION_PAGE_ID',
+    // contact: 'NOTION_PAGE_ID',
+    // about: 'NOTION_PAGE_ID',
+    // // Hint: you can use '/' in slug name to create subpages
+    // 'about/people': 'NOTION_PAGE_ID',
   },
 
   // Rewrite meta tags for specific pages

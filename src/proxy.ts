@@ -1,4 +1,4 @@
-import { rewriteHtml } from './helpers'
+import { rewriteHtml, getUrlState } from './helpers'
 import {
   handleApi,
   handleAppJs,
@@ -28,6 +28,10 @@ export function initializeNooxy(
 
   return async (request: Request): Promise<Response> => {
     const siteConfig = configManager.getConfig()
+    const url = getUrlState(request.url)
+    if (url.isLocalhost) {
+      siteConfig.domain = url.domain
+    }
     return reverseProxy(request, siteConfig)
   }
 }
@@ -39,19 +43,24 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
     return handleOptions(request)
   }
 
+  const urlOrgState = getUrlState(request.url)
   const url = new URL(request.url)
   const subDomain = url.hostname.split('.')[0]
 
-  if (url.hostname === domain) {
+  if (url.hostname === domain || urlOrgState.isLocalhost) {
+    if (urlOrgState.isLocalhost) {
+      url.protocol = 'https:'
+      url.port = ''
+    }
     url.hostname = siteConfig.notionDomain ? `${siteConfig.notionDomain}.notion.site` : 'www.notion.so'
 
     // Handle special Notion routes
     if (url.pathname === '/robots.txt') {
-      return new Response(`Sitemap: https://${domain}/sitemap.xml`)
+      return new Response(`Sitemap: ${urlOrgState.protocol}//${domain}/sitemap.xml`)
     }
 
     if (url.pathname === '/sitemap.xml') {
-      return handleSitemap(siteConfig)
+      return handleSitemap(siteConfig, urlOrgState.protocol)
     }
 
     if (url.pathname.startsWith('/app') && url.pathname.endsWith('js')) {
@@ -86,12 +95,12 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
     const page = slugToPage[slug]
 
     if (page) {
-      return Response.redirect(`https://${domain}/${page}`, 301)
+      return Response.redirect(`${urlOrgState.protocol}//${domain}/${page}`, 301)
     } else if (slugHash && slugHash !== slug && slugHash.length === 32) {
-      return Response.redirect(`https://${domain}/${slugHash}`, 301)
+      return Response.redirect(`${urlOrgState.protocol}//${domain}/${slugHash}`, 301)
     } else if (slug && slug.length !== 32) {
       if (siteConfig.fof?.page?.length) {
-        return Response.redirect(`https://${domain}/${siteConfig.fof.page}`, 301)
+        return Response.redirect(`${urlOrgState.protocol}//${domain}/${siteConfig.fof.page}`, 301)
       } else {
         console.error('!! Page Not found (404)', url.pathname)
 
@@ -116,5 +125,5 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
   ret.headers.delete('Content-Security-Policy')
   ret.headers.delete('X-Content-Security-Policy')
 
-  return rewriteHtml(ret, url, siteConfig)
+  return rewriteHtml(ret, url, siteConfig, urlOrgState.protocol)
 }
