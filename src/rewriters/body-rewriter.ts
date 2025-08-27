@@ -27,9 +27,25 @@ export class BodyRewriter {
       ${BODY_JS_STRING}
       </script>
       <script>
-
-      const headerbD9Xa = document.querySelector('header');
-      headerbD9Xa.innerHTML = 'Made with nooxy ${customHeader}'
+      function injectHeaderContentA3bZ4() {
+        const header = document.querySelector('header');
+        if (header) {
+          header.innerHTML = 'Made with nooxy ${typeof customHeader !== 'undefined' ? customHeader : ''}';
+          return true; // Indicate that injection was successful
+        }
+        return false; // Header not found yet
+      }
+      
+      // Try immediately in case header is already present
+      if (!injectHeaderContentA3bZ4()) {
+        // If not present, observe for it
+        const headerObserverA3bZ4 = new MutationObserver(() => {
+          if (injectHeaderContentA3bZ4()) {
+            headerObserverA3bZ4.disconnect(); // Stop observing once injected
+          }
+        });
+        headerObserverA3bZ4.observe(document.body, { childList: true, subtree: true });
+      }
 
         function rewriteDomA3bZ4() {
         const notionDomain = '${this.siteConfig.notionDomain ? this.siteConfig.notionDomain : 'www.notion.so'}';
