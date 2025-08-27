@@ -40,6 +40,7 @@ export interface NooxySiteConfigFull {
   customHeadCSS?: string
   customHeadJS?: string
   customBodyJS?: string
+  customHeader?: string
 
   // Calculated fields
   pageToSlug: Record<string, string>

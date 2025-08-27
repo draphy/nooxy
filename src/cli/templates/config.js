@@ -1,6 +1,7 @@
 import { googleTag } from 'nooxy'
 import { BODY_JS_STRING } from './generated/body-js-string.js'
 import { HEAD_CSS_STRING } from './generated/head-css-string.js'
+import { HEADER_HTML_STRING } from './generated/header-html-string.js'
 
 // Set this to your Google Tag ID from Google Analytics
 const GOOGLE_TAG_ID = ''
@@ -68,4 +69,5 @@ export const SITE_CONFIG = {
   customHeadCSS: HEAD_CSS_STRING,
   customHeadJS: googleTag(GOOGLE_TAG_ID), // Add your Google Tag ID here if needed
   customBodyJS: BODY_JS_STRING, // Add your custom body script here if needed
+  customHeader: HEADER_HTML_STRING, // Add your custom header html elements here if needed
 }
