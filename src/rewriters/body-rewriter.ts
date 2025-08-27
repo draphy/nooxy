@@ -17,7 +17,8 @@ export class BodyRewriter {
       `
       <script>
       const domain = '${domain}';
-      window.CONFIG.domainBaseUrl = '${this.protocol}//${domain}';
+      const domainUrl = '${this.protocol}//${domain}';
+      window.CONFIG.domainBaseUrl = domainUrl;
       const SLUG_TO_PAGE = ${JSON.stringify(slugToPage)};
       const PAGE_TO_SLUG = ${JSON.stringify(pageToSlug)};
       const slugs = ${JSON.stringify(slugs)};
@@ -25,7 +26,9 @@ export class BodyRewriter {
       const notionDomain = '${this.siteConfig.notionDomain ? this.siteConfig.notionDomain : 'www.notion.so'}';
       ${BODY_JS_STRING}
       </script>
+      <script>
       ${customBodyJS ?? ''}
+      </script>
       `,
       {
         html: true,

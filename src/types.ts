@@ -22,7 +22,7 @@ export interface NooxySiteConfigFull {
   siteIcon?: string
 
   // Additional safety: avoid serving extraneous Notion content from your website
-  // Use the value from your Notion settings => Workspace => Settings => Domain
+  // Use the value from your Notion like example.notion.site
   notionDomain?: string
 
   // 404 Notion page to display to visitors, the default slug is '404'

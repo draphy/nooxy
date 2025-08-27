@@ -52,7 +52,7 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
       url.protocol = 'https:'
       url.port = ''
     }
-    url.hostname = siteConfig.notionDomain ? `${siteConfig.notionDomain}.notion.site` : 'www.notion.so'
+    url.hostname = siteConfig.notionDomain ? siteConfig.notionDomain : 'www.notion.so'
 
     // Handle special Notion routes
     if (url.pathname === '/robots.txt') {

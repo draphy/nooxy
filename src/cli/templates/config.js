@@ -22,7 +22,7 @@ export const SITE_CONFIG = {
   // siteIcon: '',
 
   // Additional safety: avoid serving extraneous Notion content from your website
-  // Use the value from your Notion settings => Workspace => Settings => Domain
+  // Use the value from your Notion like example.notion.site
   // notionDomain: '',
 
   // Map slugs (short page names) to Notion page IDs

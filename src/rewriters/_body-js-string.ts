@@ -186,4 +186,36 @@ window.XMLHttpRequest.prototype.open = function () {
 
   open.apply(this, [].slice.call(arguments))
 }
-`
+
+const bodyObserver = new MutationObserver(() => {
+// replace all notion href
+  const anchors = document.querySelectorAll('a[href]');
+  anchors.forEach(anchor => {
+    try {
+      const url = new URL(anchor.href,domainUrl);
+      if (
+        url.hostname === notionDomain
+      ) {
+        url.hostname = domain;
+        anchor.href = url.toString();
+      }
+    } catch (e) {
+      // Ignore invalid URLs
+    }
+  });
+
+    // Remove all Notion tooltips on images
+    const tooltips = document.querySelectorAll('div[style*="position: absolute; top: 4px;"]')
+    tooltips.forEach((el) => {
+      el.style.display = 'none'
+    })
+
+    // Remove hidden properties dropdown
+    const propertiesDropdown = document.querySelector('div[aria-label="Page properties"]')?.nextElementSibling
+
+    if (propertiesDropdown) {
+      propertiesDropdown.style.display = 'none'
+    }
+  });
+
+  bodyObserver.observe(document.body, { childList: true, subtree: true });`
