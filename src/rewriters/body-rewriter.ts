@@ -27,10 +27,38 @@ export class BodyRewriter {
       ${BODY_JS_STRING}
       </script>
       <script>
+
+      function buildCustomHeader() {
+  return \`
+  <div class="nooxyBadge_4f7c2b1a-demo-topbar">
+
+  ${customHeader}
+
+  <a class="nooxyBadge_4f7c2b1a-badge-link" href="#" tabindex="0">
+    <!-- Subtle shine effect -->
+    <span class="nooxyBadge_4f7c2b1a-badge-shine"></span>
+    <!-- Sparkle icon -->
+    <svg
+      class="nooxyBadge_4f7c2b1a-badge-icon"
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path
+        d="M12 0l3.09 6.26L22 9.27l-6.91 3.01L12 24l-3.09-11.72L2 9.27l6.91-3.01L12 0z"
+      />
+    </svg>
+    Made with Nooxy
+  </a>
+</div>
+  \`;
+}
+
       function injectHeaderContentA3bZ4() {
         const header = document.querySelector('header');
         if (header) {
-          header.innerHTML = 'Made with nooxy ${typeof customHeader !== 'undefined' ? customHeader : ''}';
+          header.innerHTML = buildCustomHeader();
           return true; // Indicate that injection was successful
         }
         return false; // Header not found yet
@@ -62,6 +90,13 @@ export class BodyRewriter {
         // Ignore invalid URLs
       }
     });
+
+    // --- Remove all Notion top bar ---
+    const header = document.querySelector('header');
+    if (header) {
+      header.querySelectorAll('.notion-topbar-mobile').forEach(el => el.remove());
+      header.querySelectorAll('.notion-topbar').forEach(el => el.remove());
+    }
   
     // --- Remove all Notion tooltips on images ---
     document.querySelectorAll('div[style*="position: absolute; top: 4px;"]').forEach(el => {
