@@ -13,46 +13,27 @@ async function getHTMLRewriter() {
   }
 }
 
-export async function rewriteHtml(res: Response, url: URL, config: NooxySiteConfigFull) {
+export async function rewriteHtml(res: Response, url: URL, config: NooxySiteConfigFull, protocol: string) {
   const { HTMLRewriter } = await getHTMLRewriter()
 
   return new HTMLRewriter()
-    .on('title', new MetaRewriter(config, url))
-    .on('meta', new MetaRewriter(config, url))
+    .on('title', new MetaRewriter(config, url, protocol))
+    .on('meta', new MetaRewriter(config, url, protocol))
     .on('head', new HeadRewriter(config))
-    .on('body', new BodyRewriter(config))
+    .on('body', new BodyRewriter(config, protocol))
     .transform(res)
 }
 
-// environment-detector
-export const detectEnvironment = () => {
-  // Cloudflare Workers - most specific check first
-  if (
-    typeof globalThis !== 'undefined' &&
-    'caches' in globalThis &&
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    typeof (globalThis as any).addEventListener === 'function' &&
-    !('Deno' in globalThis) &&
-    !('process' in globalThis)
-  ) {
-    return 'cloudflare'
+export const getUrlState = (url: string) => {
+  const urlObj = new URL(url)
+  const isLocalhost = checkLocalhost(urlObj.hostname)
+  return {
+    isLocalhost,
+    protocol: urlObj.protocol,
+    port: urlObj.port,
+    domain: isLocalhost ? `${urlObj.hostname}:${urlObj.port}` : urlObj.hostname,
   }
-
-  // Deno
-  if (typeof globalThis !== 'undefined' && 'Deno' in globalThis) {
-    return 'deno'
-  }
-
-  // Node.js
-  if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-    return 'node'
-  }
-
-  // Browser
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  if (typeof (globalThis as any).window !== 'undefined' && typeof (globalThis as any).document !== 'undefined') {
-    return 'browser'
-  }
-
-  return 'unknown'
 }
+
+export const checkLocalhost = (hostname: string) => localhost.includes(hostname)
+const localhost = ['localhost', '127.0.0.1', '::1']

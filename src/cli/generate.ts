@@ -14,9 +14,10 @@ export async function generate() {
   // File paths
   const bodyJsPath = path.join(nooxyDir, 'body.js')
   const headCssPath = path.join(nooxyDir, 'head.css')
+  const headerHtmlPath = path.join(nooxyDir, 'header.html')
   const outBodyJsString = path.join(generatedDir, 'body-js-string.js')
   const outHeadCssString = path.join(generatedDir, 'head-css-string.js')
-
+  const outHeaderHtmlString = path.join(generatedDir, 'header-html-string.js')
   // Read and write body.js
   try {
     const bodyJsContent = fs.readFileSync(bodyJsPath, 'utf8')
@@ -37,5 +38,16 @@ export async function generate() {
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   } catch (err: any) {
     console.error(`❌ Failed to process head.css: ${err.message}`)
+  }
+
+  // Read and write header.html
+  try {
+    const headerHtmlContent = fs.readFileSync(headerHtmlPath, 'utf8')
+    const headerHtmlExport = `export const HEADER_HTML_STRING = \`${headerHtmlContent.replace(/`/g, '\u0060')}\`\n`
+    fs.writeFileSync(outHeaderHtmlString, headerHtmlExport, 'utf8')
+    console.log(`✅ Generated ${outHeaderHtmlString}`)
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  } catch (err: any) {
+    console.error(`❌ Failed to process header.html: ${err.message}`)
   }
 }

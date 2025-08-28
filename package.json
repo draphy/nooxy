@@ -2,6 +2,7 @@
   "name": "nooxy",
   "version": "0.0.0-development",
   "description": "nooxy is a free and powerful Notion Reverse Proxy.",
+  "private": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/draphy/nooxy"
@@ -16,7 +17,14 @@
     "Workers",
     "Hosting",
     "Reverse Proxy",
-    "Proxy"
+    "Proxy",
+    "Nooxy",
+    "Node",
+    "JS",
+    "TS",
+    "Blogs",
+    "Personal Website",
+    "HTML"
   ],
   "author": {
     "name": "David Raphi",
@@ -33,6 +41,15 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*.html",
+    "dist/**/*.css",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "cli": "./dist/cli/index.js"
   },

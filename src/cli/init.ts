@@ -23,6 +23,7 @@ export function init() {
     { src: 'config.js', dest: 'config.js' },
     { src: 'body.js', dest: 'body.js' },
     { src: 'head.css', dest: 'head.css' },
+    { src: 'header.html', dest: 'header.html' },
   ]
 
   // Copy each file

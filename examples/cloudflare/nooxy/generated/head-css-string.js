@@ -1,4 +1,4 @@
-/* Here you can add your custom css for the notion page*/
+export const HEAD_CSS_STRING = `/* Here you can add your custom css for the notion page*/
 /* Note: Try to keep unique names as it might conflict with notion css */
 
 .nooxyBadge_4f7c2b1a-demo-topbar {
@@ -66,3 +66,4 @@
     gap: 4px !important;
   }
 }
+`

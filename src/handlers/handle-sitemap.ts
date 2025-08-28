@@ -1,11 +1,11 @@
 import { NooxySiteConfigFull } from '../types'
 
-export function handleSitemap(siteConfig: NooxySiteConfigFull) {
+export function handleSitemap(siteConfig: NooxySiteConfigFull, protocol: string) {
   const { domain, slugs } = siteConfig
   let sitemap = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
 
   slugs.forEach((slug) => {
-    sitemap += `<url><loc>https://${domain}/${slug}</loc></url>`
+    sitemap += `<url><loc>${protocol}//${domain}/${slug}</loc></url>`
   })
   sitemap += '</urlset>'
 

@@ -185,5 +185,4 @@ window.XMLHttpRequest.prototype.open = function () {
   }
 
   open.apply(this, [].slice.call(arguments))
-}
-`
+}`

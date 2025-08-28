@@ -8,11 +8,11 @@
   "files": {
     "ignoreUnknown": true,
     "ignore": [
+      "examples/**",
       "node_modules/**",
       "dist/**",
       "build/**",
       "out/**",
-      "templates/**",
       "coverage/**",
       "package.json",
       "tsconfig.json",
