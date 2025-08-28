@@ -42,6 +42,7 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
+    "dist/**/*.html",
     "dist/**/*.css",
     "dist/**/*.js",
     "dist/**/*.d.ts",
