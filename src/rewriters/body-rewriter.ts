@@ -18,23 +18,20 @@ export class BodyRewriter {
       <script>
       const domain = '${domain}';
       const domainUrl = '${this.protocol}//${domain}';
-      window.CONFIG.domainBaseUrl = domainUrl;
+      if (window.CONFIG?.domainBaseUrl) window.CONFIG.domainBaseUrl = domainUrl;
       const SLUG_TO_PAGE = ${JSON.stringify(slugToPage)};
       const PAGE_TO_SLUG = ${JSON.stringify(pageToSlug)};
       const slugs = ${JSON.stringify(slugs)};
       const pages = ${JSON.stringify(pages)};
       const notionDomain = '${this.siteConfig.notionDomain ? this.siteConfig.notionDomain : 'www.notion.so'}';
-      ${BODY_JS_STRING}
-      </script>
-      <script>
 
       function buildCustomHeader() {
   return \`
   <div class="nooxyBadge_4f7c2b1a-demo-topbar">
 
-  ${customHeader}
+  ${customHeader ?? ''}
 
-  <a class="nooxyBadge_4f7c2b1a-badge-link" href="#" tabindex="0">
+  <a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0">
     <!-- Subtle shine effect -->
     <span class="nooxyBadge_4f7c2b1a-badge-shine"></span>
     <!-- Sparkle icon -->
@@ -55,83 +52,60 @@ export class BodyRewriter {
   \`;
 }
 
-      function injectHeaderContentA3bZ4() {
-        const header = document.querySelector('header');
-        if (header) {
-          header.innerHTML = buildCustomHeader();
-          return true; // Indicate that injection was successful
-        }
-        return false; // Header not found yet
-      }
-      
-      // Try immediately in case header is already present
-      if (!injectHeaderContentA3bZ4()) {
-        // If not present, observe for it
-        const headerObserverA3bZ4 = new MutationObserver(() => {
-          if (injectHeaderContentA3bZ4()) {
-            headerObserverA3bZ4.disconnect(); // Stop observing once injected
-          }
-        });
-        headerObserverA3bZ4.observe(document.body, { childList: true, subtree: true });
-      }
+function buildErrorPage() {
+  return \`
+      <div
+        class="nooxy_4f7c2b1a-error-page"
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          margin: 0;
+          padding: 0;
+          text-align: center;
+        "
+      >
+        <h1 style="color: #e74c3c; margin-bottom: 20px; font-size: 3em">
+          Oops!
+        </h1>
+<p style="color: #666; margin-bottom: 10px; font-size: 1.2em">
+          Notion is trying to block
+          <a
+            href="https://github.com/draphy/nooxy"
+            style="color: #3498db; text-decoration: none; cursor: pointer;"
+            >nooxy</a
+          >.
+        </p>
+        <p style="color: #666; margin-bottom: 30px; font-size: 1em">
+          No worries
+        </p>
+        <a
+          href="Javascript: window.location.reload()"
+          style="
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+          "
+          >Reload</a
+        >
+      </div>
+  \`;
+}
 
-        function rewriteDomA3bZ4() {
-        const notionDomain = '${this.siteConfig.notionDomain ? this.siteConfig.notionDomain : 'www.notion.so'}';
-    // --- Anchor href rewriting logic ---
-    document.querySelectorAll('a[href]').forEach(anchor => {
-      try {
-        const url = new URL(anchor.href, '${this.protocol}//${domain}');
-        if (url.hostname === notionDomain) {
-          url.hostname = '${domain}';
-          anchor.href = url.toString();
-          anchor.setAttribute('data-href', anchor.href);
-        }
-      } catch (e) {
-        // Ignore invalid URLs
-      }
-    });
-
-    // --- Remove all Notion top bar ---
-    const header = document.querySelector('header');
-    if (header) {
-      header.querySelectorAll('.notion-topbar-mobile').forEach(el => el.remove());
-      header.querySelectorAll('.notion-topbar').forEach(el => el.remove());
-    }
-  
-    // --- Remove all Notion tooltips on images ---
-    document.querySelectorAll('div[style*="position: absolute; top: 4px;"]').forEach(el => {
-      el.style.display = 'none';
-    });
-  
-    // --- Remove hidden properties dropdown ---
-    const propertiesDropdown = document.querySelector('div[aria-label="Page properties"]')?.nextElementSibling;
-    if (propertiesDropdown) {
-      propertiesDropdown.style.display = 'none';
-    }
-  }
-  
-  // --- MutationObserver to watch for DOM changes ---
-  const domObserverA3bZ4 = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList' || mutation.type === 'subtree') {
-        rewriteDomA3bZ4();
-        break;
-      }
-    }
-  });
-  
-  domObserverA3bZ4.observe(document.body, { childList: true, subtree: true });
-  
-  rewriteDomA3bZ4();
-  
-  // --- Intercept anchor clicks to force navigation ---
-  document.addEventListener('click', function(event) {
-    const anchor = event.target.closest('a[href]');
-    if (anchor && anchor.href.includes('${domain}')) {
-      event.preventDefault();
-      window.location.href = anchor.href;
-    }
-  });
+      ${BODY_JS_STRING}
+      </script>
+      <script>
       ${customBodyJS ?? ''}
       </script>
       `,
