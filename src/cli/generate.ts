@@ -12,12 +12,26 @@ export async function generate(customPath?: string) {
   }
 
   // File paths
+  const headJsPath = path.join(nooxyDir, 'head.js')
   const bodyJsPath = path.join(nooxyDir, 'body.js')
   const headCssPath = path.join(nooxyDir, 'head.css')
   const headerHtmlPath = path.join(nooxyDir, 'header.html')
+  const outHeadJsString = path.join(generatedDir, 'head-js-string.js')
   const outBodyJsString = path.join(generatedDir, 'body-js-string.js')
   const outHeadCssString = path.join(generatedDir, 'head-css-string.js')
   const outHeaderHtmlString = path.join(generatedDir, 'header-html-string.js')
+
+  // Read and write head.js
+  try {
+    const headJsContent = fs.readFileSync(headJsPath, 'utf8')
+    const headJsExport = `export const HEAD_JS_STRING = \`${headJsContent.replace(/`/g, '\u0060')}\`\n`
+    fs.writeFileSync(outHeadJsString, headJsExport, 'utf8')
+    console.log(`✅ Generated ${outHeadJsString}`)
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  } catch (err: any) {
+    console.error(`❌ Failed to process head.js: ${err.message}`)
+  }
+
   // Read and write body.js
   try {
     const bodyJsContent = fs.readFileSync(bodyJsPath, 'utf8')

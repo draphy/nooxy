@@ -1,3 +1,4 @@
+import { googleTag } from '../helpers/config'
 import { NooxySiteConfigFull } from '../types'
 
 export class HeadRewriter {
@@ -8,8 +9,8 @@ export class HeadRewriter {
   }
 
   element(element: Element) {
-    const { googleFont, customHeadJS, customHeadCSS } = this.siteConfig
-
+    const { googleFont, customHeadJS, customHeadCSS, googleTagID } = this.siteConfig
+    const GOOGLE_TAG_ID_JS_STRING = googleTag(googleTagID)
     if (googleFont) {
       element.append(
         `<link href='https://fonts.googleapis.com/css?family=${googleFont.replace(
@@ -38,7 +39,11 @@ export class HeadRewriter {
         div.notion-topbar-mobile > div:nth-child(1n).toggle-mode { display: block !important; }
         ${customHeadCSS ?? ''}
         </style>
-        ${customHeadJS ?? ''}`,
+        ${GOOGLE_TAG_ID_JS_STRING}
+        <script>
+        ${customHeadJS ?? ''}
+        </script>
+        `,
       {
         html: true,
       },

@@ -1,4 +1,4 @@
-import { googleTag } from 'nooxy'
+import { HEAD_JS_STRING } from './generated/head-js-string.js'
 import { BODY_JS_STRING } from './generated/body-js-string.js'
 import { HEAD_CSS_STRING } from './generated/head-css-string.js'
 import { HEADER_HTML_STRING } from './generated/header-html-string.js'
@@ -64,10 +64,11 @@ export const SITE_CONFIG = {
 
   // Google Font name, you can choose from https://fonts.google.com
   googleFont: 'Roboto',
+  googleTagID: GOOGLE_TAG_ID,
 
   // Custom JS for head and body of a Notion page
   customHeadCSS: HEAD_CSS_STRING,
-  customHeadJS: googleTag(GOOGLE_TAG_ID), // Add your Google Tag ID here if needed
-  customBodyJS: BODY_JS_STRING, // Add your custom body script here if needed
-  customHeader: HEADER_HTML_STRING, // Add your custom header html elements here if needed
+  customHeadJS: HEAD_JS_STRING,
+  customBodyJS: BODY_JS_STRING,
+  customHeader: HEADER_HTML_STRING,
 }

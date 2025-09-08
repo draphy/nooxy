@@ -35,6 +35,7 @@ export interface NooxySiteConfigFull {
 
   // Google Font name, you can choose from https://fonts.google.com
   googleFont?: string
+  googleTagID?: string
 
   // Custom CSS/JS to be injected in <head> and <body>
   customHeadCSS?: string
