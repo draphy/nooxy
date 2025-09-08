@@ -117,9 +117,6 @@ const { pushState } = window.history
 
 window.history.pushState = function () {
   const url = arguments[3];
-
-console.log('PushState:', arguments);
-
   if(!url) return pushState.apply(window.history, arguments)
 
     const parsed = new URL(url, domainUrl);

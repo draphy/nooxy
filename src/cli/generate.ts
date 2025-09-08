@@ -1,8 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 
-export async function generate() {
-  const rootDir = process.cwd()
+export async function generate(customPath?: string) {
+  const rootDir = customPath ? path.resolve(customPath) : process.cwd()
   const nooxyDir = path.join(rootDir, 'nooxy')
   const generatedDir = path.join(nooxyDir, 'generated')
 
