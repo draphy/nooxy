@@ -12,7 +12,13 @@ switch (command) {
     break
   }
   case 'generate': {
-    generate()
+    let customPath: string | undefined = undefined
+    for (const arg of process.argv.slice(3)) {
+      if (arg.startsWith('--path=')) {
+        customPath = arg.slice('--path='.length).replace(/^['"]|['"]$/g, '')
+      }
+    }
+    generate(customPath)
     break
   }
   default:
