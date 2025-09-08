@@ -6,53 +6,37 @@ on:
       - latest-release
       - beta
 
+  workflow_dispatch:
+
 permissions:
   contents: write
   issues: write
   pull-requests: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  detect-changes:
+  release:
+    name: Release
     runs-on: ubuntu-latest
-    outputs:
-      builder_changed: ${{ steps.filter.outputs.builder }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Needed for changeset detection
-
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            builder:
-              - 'packages/builder/**'
-              # Add more packages here as repo grows
-              # package2:
-              #   - 'packages/package2/**'
-
-  release-builder:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.builder_changed == 'true'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/builder
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Important for semantic release to work correctly
+          fetch-depth: 0 # Important for semantic-release to analyze commits/tags
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: "10.13.1"
+          version: '10.13.1'
           run_install: false
 
       - name: Get pnpm store directory
@@ -61,8 +45,8 @@ jobs:
         run: |
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -81,9 +65,3 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm semantic-release
-
-  # Add more jobs for additional packages as repo grows
-  # release-package2:
-  #   needs: detect-changes
-  #   if: needs.detect-changes.outputs.package2_changed == 'true'
-  #   ... (similar setup to release-builder)

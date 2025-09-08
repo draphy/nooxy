@@ -11,5 +11,5 @@ module.exports = {
       },
     ],
   ],
-  tagFormat: 'builder@${version}',
+  tagFormat: 'nooxy@${version}',
 }
