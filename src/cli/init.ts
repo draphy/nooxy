@@ -21,6 +21,7 @@ export function init() {
   // Files to copy from templates
   const filesToCopy = [
     { src: 'config.js', dest: 'config.js' },
+    { src: 'head.js', dest: 'head.js' },
     { src: 'body.js', dest: 'body.js' },
     { src: 'head.css', dest: 'head.css' },
     { src: 'header.html', dest: 'header.html' },

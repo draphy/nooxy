@@ -1,5 +1,5 @@
-export function googleTag(googleTagId: string) {
-  if (googleTagId.trim().length === 0) {
+export function googleTag(googleTagId?: string) {
+  if (!googleTagId || googleTagId.trim().length === 0) {
     return ''
   }
   return `
