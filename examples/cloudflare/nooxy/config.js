@@ -3,9 +3,6 @@ import { BODY_JS_STRING } from './generated/body-js-string.js'
 import { HEAD_CSS_STRING } from './generated/head-css-string.js'
 import { HEADER_HTML_STRING } from './generated/header-html-string.js'
 
-// Set this to your Google Tag ID from Google Analytics
-const GOOGLE_TAG_ID = ''
-
 /** @type {import('nooxy').NooxySiteConfig} */
 export const SITE_CONFIG = {
   domain: 'your-domain.com',
@@ -64,7 +61,8 @@ export const SITE_CONFIG = {
 
   // Google Font name, you can choose from https://fonts.google.com
   googleFont: 'Roboto',
-  googleTagID: GOOGLE_TAG_ID,
+  // Set this to your Google Tag ID from Google Analytics
+  // googleTagID: 'GOOGLE_TAG_ID',
 
   // Custom JS for head and body of a Notion page
   customHeadCSS: HEAD_CSS_STRING,
