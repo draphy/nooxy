@@ -50,9 +50,7 @@
     "README.md",
     "LICENSE"
   ],
-  "bin": {
-    "cli": "./dist/cli/index.js"
-  },
+  "bin": "./dist/cli/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
