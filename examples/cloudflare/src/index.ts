@@ -11,6 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+
 import { initializeNooxy } from 'nooxy'
 import {SITE_CONFIG} from '../nooxy/config'
 const proxy = initializeNooxy(SITE_CONFIG)
