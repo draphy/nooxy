@@ -98,6 +98,7 @@ function buildErrorPage() {
         font-size: 1.1rem;
         font-weight: 500;
         transition: color 0.2s ease;
+        cursor: pointer;
       "
       onmouseover="this.style.color='#93c5fd'"
       onmouseout="this.style.color='#60a5fa'"
@@ -125,6 +126,7 @@ function buildErrorPage() {
         font-weight: 500;
         box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
         transition: all 0.2s ease;
+        cursor: pointer;
       "
       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.4)'"
       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(59, 130, 246, 0.3)'"
