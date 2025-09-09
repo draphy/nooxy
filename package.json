@@ -1,7 +1,7 @@
 {
   "name": "nooxy",
   "version": "0.0.0-development",
-  "description": "nooxy is a free and powerful Notion Reverse Proxy.",
+  "description": "Free Notion reverse proxy for custom domains with seamless in-domain navigation for inner Notion pages, full HTML/CSS/JS customization, multi-instance support, CLI tools, and local development support. Built for Cloudflare Workers and modern Node.js runtimes. Transform your Notion pages into professional websites with complete control over styling, SEO, and functionality - no monthly fees required.",
   "private": false,
   "repository": {
     "type": "git",
