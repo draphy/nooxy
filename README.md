@@ -46,7 +46,7 @@ const proxy = initializeNooxy({
 - Hot reloading and instant feedback
 - Debug and iterate quickly
 
-### 📁 Multiple Configuration Instances
+### 📁 **Multiple Configuration Instances**
 
 Supported via `initializeNooxy({ configKey, config })` and a cached `ConfigManager` keyed by `configKey`. This lets you run multiple isolated proxies (e.g., different domains) in the same runtime with independent caches.
 
