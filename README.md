@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="https://github.com/draphy/public-assets/blob/main/nooxy/logo.png?raw=true" alt="Nooxy Logo" width="140" />
+<img src="https://raw.githubusercontent.com/draphy/public-assets/main/nooxy/logo.png" alt="Nooxy Logo" width="140" />
 
 **A free and powerful Notion Reverse Proxy with advanced customization features**
 
