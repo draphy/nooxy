@@ -10,7 +10,7 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
-		"nooxy": "file:../../"
+		"nooxy": "^1.0.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
