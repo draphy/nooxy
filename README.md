@@ -351,29 +351,6 @@ Converts your custom files (`head.js`, `body.js`, `head.css`, `header.html`) int
 
 - `--path`: Specify a custom directory path that contains a `nooxy/` folder
 
-## 📁 Nooxy Config Structure
-
-When you run `npx nooxy init`, the following structure is created on your repo:
-
-```
-your-project/
-├── nooxy/                    # Nooxy configuration directory
-│   ├── config.js            # Main configuration file
-│   ├── head.js              # Custom JavaScript for <head>
-│   ├── body.js              # Custom JavaScript for <body>
-│   ├── head.css             # Custom CSS styles
-│   ├── header.html          # Custom HTML header
-│   └── generated/           # Auto-generated files
-│       ├── head-js-string.js
-│       ├── body-js-string.js
-│       ├── head-css-string.js
-│       └── header-html-string.js
-├── src/
-│   └── index.ts             # Your Cloudflare Worker
-├── package.json
-└── wrangler.toml            # Cloudflare Workers config
-```
-
 ## 🎨 Customization Guide
 
 ### Custom CSS Styling
