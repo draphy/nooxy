@@ -15,7 +15,7 @@
 
 ## 🚀 What is Nooxy?
 
-Nooxy is a modern, open-source Notion reverse proxy that allows you to host your Notion pages on your own custom domain with complete control over customization. Built with TypeScript and designed for Cloudflare Workers and modern Node.js runtimes (22+), Nooxy provides a powerful alternative to Notion's expensive custom domain feature with no much control for customization.
+Nooxy is a modern, open-source Notion reverse proxy that allows you to host your Notion pages on your own custom domain with complete control over customization. Built with TypeScript and designed for Cloudflare Workers and modern Node.js runtimes (22+), Nooxy provides a powerful alternative to Notion's expensive custom domain feature.
 
 ### Why Nooxy?
 
