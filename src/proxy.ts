@@ -36,6 +36,33 @@ export function initializeNooxy(
   }
 }
 
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options)
+
+      // If we get a 404 or 500 from Notion, retry
+      if (response.status === 404 || response.status >= 500) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      return response
+    } catch (error) {
+      lastError = error as Error
+      console.warn(`Fetch attempt ${attempt} failed for ${url}:`, error)
+
+      if (attempt < maxRetries) {
+        // Exponential backoff: 100ms, 200ms, 400ms
+        await new Promise((resolve) => setTimeout(resolve, 100 * 2 ** (attempt - 1)))
+      }
+    }
+  }
+
+  throw lastError || new Error('Max retries exceeded')
+}
+
 async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): Promise<Response> {
   const { domain, slugToPage, siteIcon } = siteConfig
 
@@ -114,16 +141,31 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
       return Response.redirect(sub.redirect, 301)
     }
   }
+  try {
+    const response = await fetchWithRetry(url.toString(), {
+      body: request.body,
+      headers: request.headers,
+      method: request.method,
+    })
 
-  const response = await fetch(url.toString(), {
-    body: request.body,
-    headers: request.headers,
-    method: request.method,
-  })
-  const ret = new Response(response.body as BodyInit, response)
+    const ret = new Response(response.body as BodyInit, response)
 
-  ret.headers.delete('Content-Security-Policy')
-  ret.headers.delete('X-Content-Security-Policy')
+    ret.headers.delete('Content-Security-Policy')
+    ret.headers.delete('X-Content-Security-Policy')
 
-  return rewriteHtml(ret, url, siteConfig, urlOrgState.protocol)
+    return rewriteHtml(ret, url, siteConfig, urlOrgState.protocol)
+  } catch (error) {
+    console.error('Proxy error:', error)
+
+    // If all retries failed and we have a 404 page configured, redirect to it
+    if (siteConfig.fof?.page?.length) {
+      return Response.redirect(`${urlOrgState.protocol}//${siteConfig.domain}/${siteConfig.fof.page}`, 302)
+    }
+
+    // Otherwise return a proper 404 response
+    return new Response('Page temporarily unavailable. Please try again.', {
+      status: 503,
+      headers: { 'Retry-After': '5' },
+    })
+  }
 }
