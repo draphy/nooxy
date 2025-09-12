@@ -1,5 +1,3 @@
-localStorage.__console = true;
-
 let redirected = false;
 const domainUrlObj = new URL(domainUrl);
 let navigationInProgress = false; // Flag to prevent race conditions
@@ -15,7 +13,7 @@ function getSlug() {
 function updateSlug() {
   const slug = PAGE_TO_SLUG[getPage()];
 
-  if (slug) {
+  if (slug !== undefined && slug !== null) {
     history.replaceState(history.state, '', ['/', slug].join(''));
   }
 }
@@ -42,9 +40,7 @@ const observer = new MutationObserver(() => {
     header.querySelectorAll('.notion-topbar').forEach((el) => {
       el.style.display = 'none';
     });
-    if (injectedHeader) {
-      injectedHeader.style.setProperty('display', 'block', 'important');
-    } else {
+    if (!injectedHeader) {
       header.insertAdjacentHTML('afterbegin', buildCustomHeader());
     }
   }
@@ -129,7 +125,7 @@ window.history.replaceState = function () {
     if (page) {
       arguments[2] = ['/', page].join('');
       replaceState.apply(window.history, arguments);
-      // window.location.reload()
+      window.location.reload();
 
       return;
     }
@@ -151,7 +147,7 @@ const { pushState } = window.history;
 window.history.pushState = function () {
   if (navigationInProgress) return pushState.apply(window.history, arguments);
 
-  const url = arguments[3];
+  const url = arguments[2];
   if (!url) return pushState.apply(window.history, arguments);
 
   const parsed = new URL(url, domainUrl);
@@ -160,13 +156,13 @@ window.history.pushState = function () {
     parsed.port = domainUrlObj.port;
     parsed.protocol = domainUrlObj.protocol;
   }
-  arguments[3] = parsed.href;
+  arguments[2] = parsed.href;
 
-  const dest = new URL(arguments[3]);
+  const dest = new URL(arguments[2]);
   const id = dest.pathname.slice(-32);
 
   if (pages.includes(id)) {
-    arguments[3] = ['/', PAGE_TO_SLUG[id]].join('');
+    arguments[2] = [domainUrl, '/', PAGE_TO_SLUG[id]].join('');
   }
 
   return pushState.apply(window.history, arguments);
