@@ -112,7 +112,8 @@ function buildErrorPage() {
   <!-- Reload button -->
   <div style="margin-top: 40px">
     <a
-      href="Javascript: window.location.reload()"
+      id="nooxy_reload_anchor_6f3a9c"
+      href="javascript:void(0)"
       style="
         display: inline-flex;
         align-items: center;
@@ -126,7 +127,9 @@ function buildErrorPage() {
         font-weight: 500;
         box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
         transition: all 0.2s ease;
-        cursor: pointer;
+        cursor: not-allowed;
+        pointer-events: none;
+        opacity: 0.6;
       "
       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.4)'"
       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(59, 130, 246, 0.3)'"
@@ -146,7 +149,13 @@ function buildErrorPage() {
         <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
         <path d="M3 21v-5h5" />
       </svg>
-      Try Again
+        <span>Reloading</span>
+        <p
+          id="nooxy_timer_text_6f3a9c"
+          style="margin: 0; font-size: 0.9rem; opacity: 0.9"
+        >
+        (5s)
+        </p>
     </a>
   </div>
 
