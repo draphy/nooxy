@@ -149,7 +149,7 @@ function buildErrorPage() {
         <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
         <path d="M3 21v-5h5" />
       </svg>
-        <span>Try Again</span>
+        <span>Reloading</span>
         <p
           id="nooxy_timer_text_6f3a9c"
           style="margin: 0; font-size: 0.9rem; opacity: 0.9"

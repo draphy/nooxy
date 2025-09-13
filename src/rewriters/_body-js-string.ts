@@ -18,7 +18,7 @@ function updateSlug() {
   }
 }
 
-// Add debouncing for DOM rewriting
+// Debouncing for DOM rewriting
 let rewriteTimeout;
 function debouncedRewriteDom() {
   clearTimeout(rewriteTimeout);
@@ -28,7 +28,7 @@ function debouncedRewriteDom() {
 const observer = new MutationObserver(() => {
   debouncedRewriteDom(); // Use debounced version
 
-  // --- Remove all Notion top bar ---
+  // --- Removes all Notion top bar ---
   const header = document.querySelector('header');
   const injectedHeader = document.querySelector(
     '.nooxyBadge_4f7c2b1a-demo-topbar'
@@ -60,7 +60,7 @@ const observer = new MutationObserver(() => {
     const { onpopstate } = window;
 
     window.onpopstate = function () {
-      if (navigationInProgress) return; // Prevent race conditions
+      if (navigationInProgress) return; // Prevents race conditions
 
       navigationInProgress = true;
 
@@ -77,7 +77,7 @@ const observer = new MutationObserver(() => {
 
       setTimeout(() => {
         navigationInProgress = false;
-      }, 300); // Reset flag after navigation settles
+      }, 300); // Resets flag after navigation settles
     };
   }
 });
@@ -104,7 +104,7 @@ window.history.replaceState = function () {
     return;
   }
 
-  if (navigationInProgress) return; // Prevent race conditions
+  if (navigationInProgress) return; // Prevents race conditions
 
   const slug = getSlug();
   const isKnownSlug = slugs.includes(slug);
@@ -194,7 +194,7 @@ function rewriteDomA3bZ4() {
       '.nooxy_4f7c2b1a-error-page'
     );
 
-    // Check if this is actually an error page and not just loading
+    // Checks if this is actually an error page and not just loading
     const isActualErrorPage =
       section &&
       section.textContent &&
@@ -219,24 +219,24 @@ function rewriteDomA3bZ4() {
             if (timer <= 0) {
               clearInterval(countdown);
               timerEl.textContent = '';
-              anchorEl.style.cursor = 'pointer';
-              anchorEl.style.pointerEvents = 'auto';
+              // anchorEl.style.cursor = 'pointer';
+              // anchorEl.style.pointerEvents = 'auto';
               anchorEl.style.opacity = '1';
-              anchorEl.href = 'javascript:window.location.reload()';
+              window.location.reload();
             }
           }, 1000);
         })();
       }
     }
 
-    // --- Remove all Notion tooltips on images ---
+    // --- Removes all Notion tooltips on images ---
     document
       .querySelectorAll('div[style*="position: absolute; top: 4px;"]')
       .forEach((el) => {
         el.style.display = 'none';
       });
 
-    // --- Remove hidden properties dropdown ---
+    // --- Removes hidden properties dropdown ---
     const propertiesDropdown = document.querySelector(
       'div[aria-label="Page properties"]'
     )?.nextElementSibling;
@@ -248,7 +248,7 @@ function rewriteDomA3bZ4() {
   }
 }
 
-// Better click handling with navigation state management
+// Navigation state management
 document.addEventListener('click', function (event) {
   const anchor = event.target.closest('a[href]');
   const anchorUrl = anchor?.href;
@@ -265,12 +265,12 @@ document.addEventListener('click', function (event) {
       parsed.protocol = domainUrlObj.protocol;
     }
 
-    // Add small delay to prevent race conditions
+    // Adds small delay to prevent race conditions
     setTimeout(() => {
       window.location.href = parsed.href;
     }, 50);
 
-    // Reset navigation flag after a reasonable time
+    // Resets navigation flag after a reasonable time
     setTimeout(() => {
       navigationInProgress = false;
     }, 1000);
@@ -297,13 +297,13 @@ window.XMLHttpRequest.prototype.open = function () {
 
 // Page load event listener to ensure everything is ready
 window.addEventListener('load', function () {
-  setTimeout(rewriteDomA3bZ4, 100); // Ensure DOM is fully ready
+  setTimeout(rewriteDomA3bZ4, 100); // Ensures DOM is fully ready
 });
 
-// Handle page visibility changes (when user switches tabs)
+// Handles page visibility changes (when user switches tabs)
 document.addEventListener('visibilitychange', function () {
   if (!document.hidden) {
-    setTimeout(rewriteDomA3bZ4, 200); // Rewrite DOM when user returns to tab
+    setTimeout(rewriteDomA3bZ4, 200); // Rewrites DOM when user returns to tab
   }
 });
 `
