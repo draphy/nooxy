@@ -207,6 +207,25 @@ function rewriteDomA3bZ4() {
       section.style.display = 'none';
       if (!injectErrorPage) {
         sectionParent.insertAdjacentHTML('afterbegin', buildErrorPage());
+        (function () {
+          var timer = 5;
+          var timerEl = document.getElementById('nooxy_timer_text_6f3a9c');
+          var anchorEl = document.getElementById('nooxy_reload_anchor_6f3a9c');
+
+          var countdown = setInterval(function () {
+            timer = timer - 1;
+            timerEl.textContent = '(' + timer + 's)';
+
+            if (timer <= 0) {
+              clearInterval(countdown);
+              timerEl.textContent = '';
+              anchorEl.style.cursor = 'pointer';
+              anchorEl.style.pointerEvents = 'auto';
+              anchorEl.style.opacity = '1';
+              anchorEl.href = 'javascript:window.location.reload()';
+            }
+          }, 1000);
+        })();
       }
     }
 
