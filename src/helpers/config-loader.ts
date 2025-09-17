@@ -33,7 +33,6 @@ export class ConfigManager {
     const siteConfig: NooxySiteConfigFull = {
       ...userConfig,
       slugs: [],
-      pages: [],
       pageToSlug: {},
     }
 
@@ -53,7 +52,6 @@ export class ConfigManager {
       const pageId = siteConfig.slugToPage[slug]
       if (pageId?.length) {
         siteConfig.slugs.push(slug)
-        siteConfig.pages.push(pageId)
         siteConfig.pageToSlug[pageId] = slug
       }
     })

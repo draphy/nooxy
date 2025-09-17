@@ -13,12 +13,16 @@ switch (command) {
   }
   case 'generate': {
     let customPath: string | undefined = undefined
+    let shouldMinify = true
     for (const arg of process.argv.slice(3)) {
       if (arg.startsWith('--path=')) {
         customPath = arg.slice('--path='.length).replace(/^['"]|['"]$/g, '')
       }
+      if (arg.startsWith('--no-minify')) {
+        shouldMinify = false
+      }
     }
-    generate(customPath)
+    generate(customPath, shouldMinify)
     break
   }
   default:

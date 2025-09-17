@@ -1,3 +1,2 @@
-export * from './body-rewriter'
-export * from './head-rewriter'
-export * from './meta-rewriter'
+export * from './data-rewriter'
+export * from './header-rewriter'

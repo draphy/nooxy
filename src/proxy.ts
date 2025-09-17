@@ -1,14 +1,13 @@
-import { rewriteHtml, getUrlState } from './helpers'
+import { handleFavicon, handleSitemap, handleOptions } from './handlers'
 import {
-  handleApi,
-  handleAppJs,
-  handleJs,
-  handleOptions,
-  handleSitemap,
-  handleNotionAsset,
-  handleFavicon,
-} from './handlers'
-import { ConfigManager } from './helpers/config-loader'
+  ensureHttpsUrl,
+  getUrlState,
+  handlePseudoEndpoint,
+  isNotion404,
+  resolveProxyPath,
+  ConfigManager,
+} from './helpers'
+import { modifyRequestHeaders, modifyResponseData, modifyResponseHeaders } from './rewriters'
 import { NooxySiteConfig, NooxySiteConfigFull } from './types'
 
 export function initializeNooxy(
@@ -36,124 +35,106 @@ export function initializeNooxy(
   }
 }
 
-async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3): Promise<Response> {
-  let lastError: Error | null = null
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, options)
-
-      // If we get a 404 or 500 from Notion, retry
-      if (response.status === 404 || response.status >= 500) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-
-      return response
-    } catch (error) {
-      lastError = error as Error
-      console.warn(`Fetch attempt ${attempt} failed for ${url}:`, error)
-
-      if (attempt < maxRetries) {
-        // Exponential backoff: 100ms, 200ms, 400ms
-        await new Promise((resolve) => setTimeout(resolve, 100 * 2 ** (attempt - 1)))
-      }
-    }
-  }
-
-  throw lastError || new Error('Max retries exceeded')
-}
-
 async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): Promise<Response> {
-  const { domain, slugToPage, siteIcon } = siteConfig
+  const { notionDomain, domain, siteIcon, slugToPage } = siteConfig
 
   if (request.method === 'OPTIONS') {
     return handleOptions(request)
   }
 
-  const urlOrgState = getUrlState(request.url)
   const url = new URL(request.url)
   const subDomain = url.hostname.split('.')[0]
+  const hostname = url.hostname
 
-  if (url.hostname === domain || urlOrgState.isLocalhost) {
-    if (urlOrgState.isLocalhost) {
-      url.protocol = 'https:'
-      url.port = ''
-    }
-    url.hostname = siteConfig.notionDomain ? siteConfig.notionDomain : 'www.notion.so'
-
-    // Handle special Notion routes
-    if (url.pathname === '/robots.txt') {
-      return new Response(`Sitemap: ${urlOrgState.protocol}//${domain}/sitemap.xml`)
-    }
-
-    if (url.pathname === '/sitemap.xml') {
-      return handleSitemap(siteConfig, urlOrgState.protocol)
-    }
-
-    if (url.pathname.startsWith('/app') && url.pathname.endsWith('js')) {
-      return handleAppJs(url, siteConfig)
-    }
-
-    if (url.pathname.startsWith('/api')) {
-      return handleApi(url, request)
-    }
-
-    if (url.pathname.endsWith('.js')) {
-      return handleJs(url)
-    }
-
-    if (url.pathname.endsWith('favicon.ico') && siteIcon) {
-      return handleFavicon(siteIcon)
-    }
-
-    if (
-      url.pathname.startsWith('/_assets') ||
-      url.pathname.startsWith('/image') ||
-      url.pathname.startsWith('/f/refresh') ||
-      url.pathname.match(/\.[a-zA-Z]{2,4}$/)
-    ) {
-      return handleNotionAsset(url)
-    }
-
-    // Handle slugs, from site-config
-
-    const slug = url.pathname.split('/').pop() ?? ''
-    const slugHash = url.pathname.slice(-32)
-    const page = slugToPage[slug]
-
-    if (page) {
-      return Response.redirect(`${urlOrgState.protocol}//${domain}/${page}`, 301)
-    } else if (slugHash && slugHash !== slug && slugHash.length === 32) {
-      return Response.redirect(`${urlOrgState.protocol}//${domain}/${slugHash}`, 301)
-    } else if (slug && slug.length !== 32) {
-      if (siteConfig.fof?.page?.length) {
-        return Response.redirect(`${urlOrgState.protocol}//${domain}/${siteConfig.fof.page}`, 301)
-      } else {
-        console.error('!! Page Not found (404)', url.pathname)
-
-        return new Response('Page Not found (404).', { status: 404 })
-      }
-    }
-  } else if (subDomain && siteConfig.subDomains) {
+  if (hostname !== domain.split(':')[0] && subDomain && siteConfig.subDomains) {
     const sub = siteConfig.subDomains[subDomain]
 
     if (sub) {
       return Response.redirect(sub.redirect, 301)
     }
   }
+
+  const pathname = url.pathname
+
+  // Handle pseudo endpoints
+  const pseudoResponse = handlePseudoEndpoint(pathname)
+  if (pseudoResponse) {
+    return pseudoResponse
+  }
+
+  const urlOrgState = getUrlState(request.url)
+
+  // Handle special Notion routes
+  if (pathname === '/robots.txt') {
+    return new Response(`Sitemap: ${urlOrgState.protocol}//${domain}/sitemap.xml`)
+  }
+
+  if (url.pathname === '/sitemap.xml') {
+    return handleSitemap(siteConfig, urlOrgState.protocol)
+  }
+
+  if (url.pathname.endsWith('favicon.ico') && siteIcon) {
+    return handleFavicon(siteIcon)
+  }
+
+  if (isNotion404(pathname, slugToPage)) {
+    if (siteConfig.fof?.page?.length) {
+      return Response.redirect(`${urlOrgState.protocol}//${domain}/${siteConfig.fof.page}`, 301)
+    } else {
+      console.error('!! Page Not found (404)', url.pathname)
+
+      return new Response('Page Not found (404).', { status: 404 })
+    }
+  }
+
+  // Modify request headers
+  const modifiedHeaders = modifyRequestHeaders(request.headers)
+
+  // Construct target URL
+  const notionDomainUrl = new URL(ensureHttpsUrl(notionDomain)).origin
+  const targetPath = resolveProxyPath(pathname + url.search, slugToPage)
+  const targetUrl = new URL(targetPath, notionDomainUrl)
+
+  // Create proxied request
+  const proxyRequest = new Request(targetUrl.toString(), {
+    method: request.method,
+    headers: modifiedHeaders,
+    body: request.body,
+  })
+
   try {
-    const response = await fetchWithRetry(url.toString(), {
-      body: request.body,
-      headers: request.headers,
-      method: request.method,
+    // Fetch from target
+    const response = await fetch(proxyRequest)
+
+    // Handle image requests - return as-is
+    if (/^\/image[s]?\//.test(pathname)) {
+      return response
+    }
+
+    // For 304 Not Modified responses, return with null body
+    if (response.status === 304) {
+      const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname)
+      return new Response(null, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: modifiedResponseHeaders,
+      })
+    }
+
+    // Get response data
+    const data = await response.text()
+
+    // Modify response data
+    const modifiedData = modifyResponseData(data, pathname, siteConfig)
+
+    // Modify response headers
+    const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname)
+
+    return new Response(modifiedData, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: modifiedResponseHeaders,
     })
-
-    const ret = new Response(response.body as BodyInit, response)
-
-    ret.headers.delete('Content-Security-Policy')
-    ret.headers.delete('X-Content-Security-Policy')
-
-    return rewriteHtml(ret, url, siteConfig, urlOrgState.protocol)
   } catch (error) {
     console.error('Proxy error:', error)
 
