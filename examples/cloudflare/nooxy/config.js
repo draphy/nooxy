@@ -1,7 +1,7 @@
-import { HEAD_JS_STRING } from './generated/head-js-string.js'
-import { BODY_JS_STRING } from './generated/body-js-string.js'
-import { HEAD_CSS_STRING } from './generated/head-css-string.js'
-import { HEADER_HTML_STRING } from './generated/header-html-string.js'
+import { HEAD_JS_STRING } from './generated/_head-js-string.js'
+import { BODY_JS_STRING } from './generated/_body-js-string.js'
+import { HEAD_CSS_STRING } from './generated/_head-css-string.js'
+import { HEADER_HTML_STRING } from './generated/_header-html-string.js'
 
 /** @type {import('nooxy').NooxySiteConfig} */
 export const SITE_CONFIG = {
@@ -13,9 +13,6 @@ export const SITE_CONFIG = {
   siteDescription: 'Your site description for SEO',
   // siteImage: 'Your site image icon url',
 
-  // Twitter handle, optional
-  // twitterHandle: '',
-
   // URL to custom favicon.ico
   // siteIcon: '',
 
@@ -24,13 +21,13 @@ export const SITE_CONFIG = {
   // notionDomain: '',
 
   // Map slugs (short page names) to Notion page IDs
-  // Empty slug is your main page
+  // '/' slug is your root page
   slugToPage: {
-    '': 'NOTION_HOME_PAGE_ID',
-    // contact: 'NOTION_PAGE_ID',
-    // about: 'NOTION_PAGE_ID',
-    // // Hint: you can use '/' in slug name to create subpages
-    // 'about/people': 'NOTION_PAGE_ID',
+    '/': 'NOTION_HOME_PAGE_ID',
+    // '/contact': 'NOTION_PAGE_ID',
+    // '/about': 'NOTION_PAGE_ID',
+    // Hint: you can use '/' in slug name to create subpages
+    // '/about/people': 'NOTION_PAGE_ID',
   },
 
   // Rewrite meta tags for specific pages
@@ -64,7 +61,7 @@ export const SITE_CONFIG = {
   // Set this to your Google Tag ID from Google Analytics
   // googleTagID: 'GOOGLE_TAG_ID',
 
-  // Custom JS for head and body of a Notion page
+  // Custom JS, CSS, HTML for head and body of a Notion page
   customHeadCSS: HEAD_CSS_STRING,
   customHeadJS: HEAD_JS_STRING,
   customBodyJS: BODY_JS_STRING,
