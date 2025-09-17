@@ -60,7 +60,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node build-body-js-string.js",
+    "prebuild": "node converter.js",
     "build": "pnpm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist && pnpm run build:cli",
     "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli && cp -r src/cli/templates dist/cli/",
     "biome:lint": "biome lint .",
@@ -70,7 +70,7 @@
     "biome:check": "biome check .",
     "biome:fix": "biome check --write .",
     "type:check": "tsc  --noEmit",
-    "commit:check": "pnpm biome:check && pnpm type:check && pnpm build",
+    "commit:check": "pnpm biome:check && pnpm type:check && pnpm build && pnpm biome:fix",
     "semantic-release": "semantic-release"
   },
   "dependencies": {
