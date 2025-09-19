@@ -1,10 +1,16 @@
-import { ensureHttpsUrl } from '../helpers'
-import { NooxySiteConfigFull } from '../types'
-import { HEAD_JS_STRING } from './custom/generated/_head-js-string'
-import { HEAD_CSS_STRING } from './custom/generated/_head-css-string'
+import { ensureHttpsUrl } from '../helpers';
+import { NooxySiteConfigFull } from '../types';
+import { HEAD_JS_STRING } from './custom/generated/_head-js-string';
+import { HEAD_CSS_STRING } from './custom/generated/_head-css-string';
+import { rewriteMetaTags } from './meta-rewriter';
 
 // Helper function to modify response data
-export function modifyResponseData(responseData: string, pathname: string, siteConfig: NooxySiteConfigFull): string {
+export function modifyResponseData(
+  responseData: string,
+  pathname: string,
+  siteConfig: NooxySiteConfigFull,
+  protocol: string,
+): string {
   const {
     notionDomain,
     slugToPage,
@@ -15,17 +21,17 @@ export function modifyResponseData(responseData: string, pathname: string, siteC
     customHeadJS,
     customBodyJS,
     googleFont,
-  } = siteConfig
-  let data = responseData
-  const notionDomainUrl = new URL(ensureHttpsUrl(notionDomain)).origin
-  const customJSCode = `var notionDomain='${notionDomainUrl}',slugToPage=${JSON.stringify(slugToPage)},pageToSlug=${JSON.stringify(pageToSlug)},customHeader='${customHeader}';${HEAD_JS_STRING}`
+  } = siteConfig;
+  let data = responseData;
+  const notionDomainUrl = new URL(ensureHttpsUrl(notionDomain)).origin;
+  const customJSCode = `var notionDomain='${notionDomainUrl}',slugToPage=${JSON.stringify(slugToPage)},pageToSlug=${JSON.stringify(pageToSlug)},customHeader='${customHeader}';${HEAD_JS_STRING}`;
   const googleFontInject = googleFont
     ? `<link href='https://fonts.googleapis.com/css?family=${googleFont.replace(
         ' ',
         '+',
       )}:Regular,Bold,Italic&display=swap' rel='stylesheet'>
           <style>* { font-family: "${googleFont}" !important; }</style>`
-    : ''
+    : '';
   const ga = googleTagID
     ? `<!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=${googleTagID}"></script>
@@ -36,7 +42,7 @@ export function modifyResponseData(responseData: string, pathname: string, siteC
 
       gtag('config', '${googleTagID}');
     </script>`
-    : ''
+    : '';
 
   // For investigation
   // const keywords: string[] = [
@@ -60,15 +66,18 @@ export function modifyResponseData(responseData: string, pathname: string, siteC
   // }
 
   if (/^\/_assets\/[^/]*\.js$/.test(pathname)) {
-    data = data.replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()') // Exclude 'window.location.href=' but not 'window.location.href=='
+    data = data.replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()'); // Exclude 'window.location.href=' but not 'window.location.href=='
   } else {
     // Assume HTML
+    // Apply meta tag rewriting
+    data = rewriteMetaTags(data, pathname, siteConfig, protocol);
+
     data = data
       .replace(
         '</head>',
         `${googleFontInject}<script>${customHeadJS}</script><script>${customJSCode}</script><style>${customHeadCSS}</style><style>${HEAD_CSS_STRING}</style></head>`,
       )
-      .replace('</body>', `<script>${customBodyJS}</script>${ga}</body>`)
+      .replace('</body>', `<script>${customBodyJS}</script>${ga}</body>`);
   }
 
   data = data
@@ -76,7 +85,7 @@ export function modifyResponseData(responseData: string, pathname: string, siteC
     // https://widget.intercom.io/** -> /200/widget.intercom.io/**
     .replace(/https:\/\/((aif\.notion\.so|widget\.intercom\.io)\/?[^"`]*)/g, `/200/$1`)
     // Skip Sentry.init()
-    .replace(/\w+\.init\({dsn:/, 'return;$&')
+    .replace(/\w+\.init\({dsn:/, 'return;$&');
 
-  return data
+  return data;
 }

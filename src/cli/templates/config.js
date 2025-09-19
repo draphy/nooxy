@@ -1,7 +1,7 @@
-import { HEAD_JS_STRING } from './generated/_head-js-string.js'
-import { BODY_JS_STRING } from './generated/_body-js-string.js'
-import { HEAD_CSS_STRING } from './generated/_head-css-string.js'
-import { HEADER_HTML_STRING } from './generated/_header-html-string.js'
+import { HEAD_JS_STRING } from './generated/_head-js-string.js';
+import { BODY_JS_STRING } from './generated/_body-js-string.js';
+import { HEAD_CSS_STRING } from './generated/_head-css-string.js';
+import { HEADER_HTML_STRING } from './generated/_header-html-string.js';
 
 /** @type {import('nooxy').NooxySiteConfig} */
 export const SITE_CONFIG = {
@@ -66,4 +66,4 @@ export const SITE_CONFIG = {
   customHeadJS: HEAD_JS_STRING,
   customBodyJS: BODY_JS_STRING,
   customHeader: HEADER_HTML_STRING,
-}
+};

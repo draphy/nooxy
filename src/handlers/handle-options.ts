@@ -2,7 +2,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
-}
+};
 
 export function handleOptions(request: Request) {
   if (
@@ -13,7 +13,7 @@ export function handleOptions(request: Request) {
     // Handle CORS pre-flight request.
     return new Response(null, {
       headers: corsHeaders,
-    })
+    });
   }
 
   // Handle standard OPTIONS request.
@@ -21,5 +21,5 @@ export function handleOptions(request: Request) {
     headers: {
       Allow: 'GET, HEAD, POST, PUT, OPTIONS',
     },
-  })
+  });
 }
