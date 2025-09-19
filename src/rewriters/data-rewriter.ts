@@ -67,7 +67,7 @@ export function modifyResponseData(
 
   if (/^\/_assets\/[^/]*\.js$/.test(pathname)) {
     data = data.replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()'); // Exclude 'window.location.href=' but not 'window.location.href=='
-  } else {
+  } else if (data.includes('<html') || data.includes('<!DOCTYPE')) {
     // Assume HTML
     // Apply meta tag rewriting
     data = rewriteMetaTags(data, pathname, siteConfig, protocol);
