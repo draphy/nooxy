@@ -70,9 +70,7 @@ export function modifyResponseData(
   } else if (data.includes('<html') || data.includes('<!DOCTYPE')) {
     // Assume HTML
     // Apply meta tag rewriting
-    data = rewriteMetaTags(data, pathname, siteConfig, protocol);
-
-    data = data
+    data = rewriteMetaTags(data, pathname, siteConfig, protocol)
       .replace(
         '</head>',
         `${googleFontInject}<script>${customHeadJS}</script><script>${customJSCode}</script><style>${customHeadCSS}</style><style>${HEAD_CSS_STRING}</style></head>`,
@@ -80,12 +78,12 @@ export function modifyResponseData(
       .replace('</body>', `<script>${customBodyJS}</script>${ga}</body>`);
   }
 
-  data = data
-    // https://aif.notion.so/**      -> /200/aif.notion.so/**
-    // https://widget.intercom.io/** -> /200/widget.intercom.io/**
-    .replace(/https:\/\/((aif\.notion\.so|widget\.intercom\.io)\/?[^"`]*)/g, `/200/$1`)
-    // Skip Sentry.init()
-    .replace(/\w+\.init\({dsn:/, 'return;$&');
-
-  return data;
+  return (
+    data
+      // https://aif.notion.so/**      -> /200/aif.notion.so/**
+      // https://widget.intercom.io/** -> /200/widget.intercom.io/**
+      .replace(/https:\/\/((aif\.notion\.so|widget\.intercom\.io)\/?[^"`]*)/g, `/200/$1`)
+      // Skip Sentry.init()
+      .replace(/\w+\.init\({dsn:/, 'return;$&')
+  );
 }
