@@ -125,7 +125,7 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
     const data = await response.text();
 
     // Modify response data
-    const modifiedData = modifyResponseData(data, pathname, siteConfig, urlOrgState.protocol);
+    const modifiedData = modifyResponseData(data, targetUrl.pathname, siteConfig, urlOrgState.protocol);
 
     // Modify response headers
     const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname);

@@ -13,6 +13,8 @@ export interface NooxySiteConfigFull {
   siteName: string
   // description, og:description, twitter:description
   siteDescription: string
+  // twitter:site, twitter:creator
+  twitterHandle?: string
   // og:image, twitter:image
   siteImage?: string
 

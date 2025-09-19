@@ -11,6 +11,8 @@ export const SITE_CONFIG = {
   // For main page link preview
   siteName: 'Your Site Name',
   siteDescription: 'Your site description for SEO',
+  // Social media links, optional
+  twitterHandle: '@mytwitter',
   // siteImage: 'Your site image icon url',
 
   // URL to custom favicon.ico

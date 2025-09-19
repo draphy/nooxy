@@ -109,11 +109,3 @@ export function extractPageId(input: string) {
   const match = path?.match(/([a-fA-F0-9]{32})(?=\/?$)/);
   return match?.[1] ? match[1] : '';
 }
-
-// Helper function to remove Notion branding from text
-export function removeNotionAds(text: string) {
-  return text
-    .replace(' | Built with Notion', '')
-    .replace(' | Notion', '')
-    .replace('Built with Notion, the all-in-one connected workspace with publishing capabilities.', '');
-}
