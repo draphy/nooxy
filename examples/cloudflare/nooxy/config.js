@@ -1,25 +1,12 @@
-import { HEAD_JS_STRING } from './generated/_head-js-string.js'
-import { BODY_JS_STRING } from './generated/_body-js-string.js'
-import { HEAD_CSS_STRING } from './generated/_head-css-string.js'
-import { HEADER_HTML_STRING } from './generated/_header-html-string.js'
+import { HEAD_JS_STRING } from './generated/_head-js-string.js';
+import { BODY_JS_STRING } from './generated/_body-js-string.js';
+import { HEAD_CSS_STRING } from './generated/_head-css-string.js';
+import { HEADER_HTML_STRING } from './generated/_header-html-string.js';
 
 /** @type {import('nooxy').NooxySiteConfig} */
 export const SITE_CONFIG = {
+  // Site domain, example.com
   domain: 'your-domain.com',
-
-  // Metatags, optional
-  // For main page link preview
-  siteName: 'Your Site Name',
-  siteDescription: 'Your site description for SEO',
-  // siteImage: 'Your site image icon url',
-
-  // URL to custom favicon.ico
-  // siteIcon: '',
-
-  // Additional safety: avoid serving extraneous Notion content from your website
-  // Use the value from your Notion like example.notion.site
-  // notionDomain: '',
-
   // Map slugs (short page names) to Notion page IDs
   // '/' slug is your root page
   slugToPage: {
@@ -29,7 +16,8 @@ export const SITE_CONFIG = {
     // Hint: you can use '/' in slug name to create subpages
     // '/about/people': 'NOTION_PAGE_ID',
   },
-
+  // SEO metadata
+  // For main page link preview
   // Rewrite meta tags for specific pages
   // Use the Notion page ID as the key
   // pageMetadata: {
@@ -40,24 +28,31 @@ export const SITE_CONFIG = {
   //     author: 'My Name',
   //   },
   // },
-
-  // Subdomain redirects are optional
-  // But it is recommended to have one for www
-  subDomains: {
-    www: {
-      redirect: 'https://your-domain.com',
-    },
-  },
-
+  // og:site_name
+  siteName: 'Your Site Name',
+  // Social media links, optional
+  // twitter:site
+  // twitterHandle: '@mytwitter',
+  // URL to custom favicon.ico
+  // siteIcon: '',
+  // Additional safety: avoid serving extraneous Notion content from your website
+  // Use the value from your Notion like example.notion.site
+  notionDomain: 'example.notion.site',
   // The 404 (not found) page is optional
   // If you don't have one, the default 404 page will be used
   // fof: {
   //   page: "NOTION_PAGE_ID",
   //   slug: "404", // default
   // },
-
+  // Subdomain redirects are optional
+  // But it is recommended to have one for www
+  // subDomains: {
+  //   www: {
+  //     redirect: 'https://your-domain.com',
+  //   },
+  // },
   // Google Font name, you can choose from https://fonts.google.com
-  googleFont: 'Roboto',
+  // googleFont: 'Roboto',
   // Set this to your Google Tag ID from Google Analytics
   // googleTagID: 'GOOGLE_TAG_ID',
 
@@ -66,4 +61,4 @@ export const SITE_CONFIG = {
   customHeadJS: HEAD_JS_STRING,
   customBodyJS: BODY_JS_STRING,
   customHeader: HEADER_HTML_STRING,
-}
+};
