@@ -62,6 +62,21 @@ export function rewriteMetaTags(
       return match;
     });
 
+  // If no JSON-LD exists, inject one at the beginning of head for better crawler priority
+  if (!/<script type="application\/ld\+json">/i.test(result)) {
+    const websiteSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: siteName,
+      url: finalUrl,
+    };
+
+    result = result.replace(
+      /(<head[^>]*>)/i,
+      `$1\n<script type="application/ld+json">${JSON.stringify(websiteSchema)}</script>`,
+    );
+  }
+
   if (pageImage) {
     result = result
       .replace(
