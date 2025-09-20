@@ -520,29 +520,31 @@ src/
 ├── proxy.ts              # Core reverse proxy logic
 ├── types.ts              # TypeScript type definitions
 ├── helpers/              # Utility functions
-│   ├── config-loader.ts  # Configuration management
-│   ├── config.ts         # Helper functions
-│   └── index.ts          # HTML rewriting utilities
+│   ├── config-loader.ts  # Configuration management with caching
+│   └── index.ts          # URL handling, localhost detection, and helper utilities
 ├── handlers/             # Request handlers
-│   ├── handle-api.ts     # API request handling
-│   ├── handle-app-js.ts  # JavaScript file handling
 │   ├── handle-favicon.ts # Favicon handling
-│   ├── handle-js.ts      # General JS file handling
 │   ├── handle-options.ts # CORS preflight handling
-│   ├── handle-other.ts   # Other asset handling
-│   └── handle-sitemap.ts # Sitemap generation
+│   ├── handle-sitemap.ts # Sitemap generation
+│   └── index.ts          # Handler exports
 ├── rewriters/            # HTML content rewriting
-│   ├── body-rewriter.ts  # Body content rewriting
-│   ├── head-rewriter.ts  # Head content rewriting
-│   ├── meta-rewriter.ts  # Meta tag rewriting and metadata customization
-│   ├── data-rewriter.ts  # Data rewriting and metadata injection
-│   ├── header-rewriter.ts # Header rewriting and metadata handling
-│   ├── body.js           # Client-side JavaScript
-│   └── _body-js-string.ts # Generated body JS string
+│   ├── data-rewriter.ts  # Response data rewriting and script injection
+│   ├── header-rewriter.ts# Request/response header modification
+│   ├── meta-rewriter.ts  # Meta tag rewriting and SEO metadata customization
+│   ├── index.ts          # Rewriter exports
+│   └── custom/           # Custom styling and scripts
+│       ├── generated/    # Auto-generated minified strings (created by CLI)
+│       │   ├── _head-css-string.ts  # Minified CSS string
+│       │   └── _head-js-string.ts   # Minified JS string
+│       ├── head.css      # Default custom CSS styles
+│       └── head.js       # Default custom JavaScript
+├── lib/                  # Core libraries
+│   ├── minify.js         # JavaScript minification utilities
+│   └── minify.d.ts       # TypeScript definitions for minify
 └── cli/                  # Command-line interface
     ├── index.ts          # CLI entry point
     ├── init.ts           # Initialize command
-    ├── generate.ts       # Generate command
+    ├── generate.ts       # Generate command with minification
     └── templates/        # Configuration templates
         ├── config.js     # Main config template
         ├── head.js       # Head JS template
@@ -556,23 +558,51 @@ src/
 1. **Request Interception**: Nooxy intercepts requests to your custom domain
 2. **URL Mapping**: Maps clean URLs to Notion page IDs using your configuration
 3. **Content Fetching**: Fetches content from Notion's servers
-4. **HTML Rewriting**: Uses HTMLRewriter to modify the content in real-time
+4. **HTML Rewriting**: Uses string replacement and regex to modify content in real-time
 5. **Metadata Customization**: Rewrites meta tags, Open Graph, Twitter cards, and JSON-LD structured data
-6. **Response Delivery**: Serves the modified content to your visitors
+6. **Header Modification**: Modifies request/response headers for proper domain handling
+7. **Script Injection**: Injects custom CSS, JavaScript, and header content
+8. **Response Delivery**: Serves the modified content to your visitors
+
+### Key Architecture Features
+
+#### Configuration Management
+
+- **Multi-instance Support**: `ConfigManager` class with instance caching keyed by `configKey`
+- **Smart Caching**: Processed configurations are cached to improve performance
+- **Dynamic Processing**: Automatically builds helper indexes (slugs, pageToSlug mapping)
+
+#### Content Rewriting System
+
+- **Data Rewriter**: Handles response data modification, script injection, and URL rewriting
+- **Header Rewriter**: Manages request/response header modifications for domain handling
+- **Meta Rewriter**: Specialized SEO metadata customization and JSON-LD structured data
+
+#### CLI System
+
+- **Template Generation**: Creates initial configuration files from templates
+- **File Processing**: Converts custom files to minified TypeScript string constants
+- **Minification**: Advanced minification for JavaScript, CSS, and HTML files
+
+#### Handler System
+
+- **Favicon Handler**: Proxies custom favicon requests
+- **Sitemap Handler**: Automatically generates XML sitemaps
+- **Options Handler**: Manages CORS preflight requests
 
 ### Notable Differences
 
-Nooxy is inspired by [Fruition](https://github.com/stephenou/fruitionsite) and [NoteHost](https://github.com/velsa/notehost) but, Nooxy adds:
+Nooxy is inspired by [Fruition](https://github.com/stephenou/fruitionsite) and [NoteHost](https://github.com/velsa/notehost) but adds:
 
 - A maintained TypeScript package API for embedding into different runtimes
 - **Zero dependencies** for minimal bundle size and fast deployment
 - CLI with `init` (scaffold config) and `generate` (convert custom files to strings), with `--path` support on generate
 - Multi-instance configuration with caching keyed by `configKey` for multi-tenant or multi-env setups
-- Robust HTML rewriting for head, meta, and body plus helpers for Google Fonts and Analytics
+- Robust content rewriting system with specialized handlers for different content types
 - **Advanced metadata customization** with page-specific SEO, Open Graph, Twitter cards, and JSON-LD structured data
-- Client-side navigation and href rewriting that keeps users on your domain and preserves slugs, with XHR guardrails
-- Optional custom favicon proxying and automatic sitemap generation
-- Local development detection with domain normalization for a smooth localhost experience
+- Client-side navigation and URL rewriting that keeps users on your domain and preserves slugs
+- **Automatic minification** system for optimal performance and reduced bundle sizes
+- Local development detection with domain normalization for smooth localhost experience
 
 ## 🤝 Contributing
 
