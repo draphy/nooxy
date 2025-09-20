@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       nooxy:
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.5.0
+        version: 1.5.0
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.19
@@ -781,9 +781,6 @@ packages:
   glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
 
-  htmlrewriter@0.0.7:
-    resolution: {integrity: sha512-OvSdqGI04ZZm+zzWv+JXRiqn61sFY3ei9sY3HjNCJL7g6LXQH23CENO68hTTxM5xan0P2ENQ8+GTRQwHbPpyvg==}
-
   is-arrayish@0.3.2:
     resolution: {integrity: sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ==}
 
@@ -818,8 +815,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nooxy@1.4.0:
-    resolution: {integrity: sha512-yep/xbXXvaoMW0KwZzAAnfhZegmyoINaf5rKwi+iMPCg21hkC0/NNVvthB2rm+j0xy3ctavD1wKirjGkvX0GtQ==}
+  nooxy@1.5.0:
+    resolution: {integrity: sha512-fLh/ZTdMc8WFtsIVQURkfh1kkoyYHHJ9nNVwQpo7NgcQDURAiql/sQidlPqjb7DHhApp/qFvqjZ2kVW7Mf5zRQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -1595,8 +1592,6 @@ snapshots:
 
   glob-to-regexp@0.4.1: {}
 
-  htmlrewriter@0.0.7: {}
-
   is-arrayish@0.3.2: {}
 
   js-tokens@9.0.1: {}
@@ -1633,9 +1628,7 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nooxy@1.4.0:
-    dependencies:
-      htmlrewriter: 0.0.7
+  nooxy@1.5.0: {}
 
   ohash@2.0.11: {}
 
