@@ -6,17 +6,12 @@ export interface NooxySiteConfigFull {
 
   // Mapping from slug to page ID
   slugToPage: Record<string, string>
-  pageMetadata?: Record<string, NooxySiteConfigPageMetadata>
-
   // SEO metadata
-  // title, og:site_name, article:author
+  pageMetadata?: Record<string, NooxySiteConfigPageMetadata>
+  // og:site_name
   siteName: string
-  // description, og:description, twitter:description
-  siteDescription: string
-  // twitter:site, twitter:creator
+  // twitter:site
   twitterHandle?: string
-  // og:image, twitter:image
-  siteImage?: string
 
   // URL to custom favicon.ico
   siteIcon?: string

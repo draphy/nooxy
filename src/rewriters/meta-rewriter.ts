@@ -8,7 +8,7 @@ export function rewriteMetaTags(
   siteConfig: NooxySiteConfigFull,
   protocol: string,
 ): string {
-  const { siteName, siteDescription, siteImage, domain, pageToSlug, pageMetadata, twitterHandle } = siteConfig;
+  const { siteName, domain, pageToSlug, pageMetadata, twitterHandle } = siteConfig;
   const pageId = extractPageId(pathname);
   const isRootPage = pageToSlug[pageId] === '/';
 
@@ -18,11 +18,6 @@ export function rewriteMetaTags(
   const pageImage = pageMeta?.image;
   const pageAuthor = pageMeta?.author;
 
-  const finalTitle = isRootPage ? siteName : (pageTitle ?? siteName);
-  const finalDescription = isRootPage ? siteDescription : (pageDescription ?? siteDescription);
-  const finalImage = isRootPage && siteImage ? siteImage : (pageImage ?? siteImage);
-  const finalAuthor = pageAuthor ?? '';
-
   const finalUrl = isRootPage
     ? `${protocol}//${domain}/`
     : pageToSlug[pageId]
@@ -30,22 +25,9 @@ export function rewriteMetaTags(
       : `${protocol}//${domain}/${pageId}`;
 
   let result = responseData
-    .replace(/<title>[^<]*<\/title>/gi, `<title>${finalTitle}</title>`)
-    .replace(
-      /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/gi,
-      `<meta name="description" content="${finalDescription}"/>`,
-    )
     .replace(
       /<meta\s+name="twitter:site"\s+content="[^"]*"\s*\/?>/gi,
       twitterHandle ? `<meta name="twitter:site" content="${twitterHandle}"/>` : '',
-    )
-    .replace(
-      /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/gi,
-      `<meta name="twitter:title" content="${finalTitle}"/>`,
-    )
-    .replace(
-      /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/gi,
-      `<meta name="twitter:description" content="${finalDescription}"/>`,
     )
     .replace(
       /<meta\s+name="twitter:url"\s+content="[^"]*"\s*\/?>/gi,
@@ -54,14 +36,6 @@ export function rewriteMetaTags(
     .replace(
       /<meta\s+property="og:site_name"\s+content="[^"]*"\s*\/?>/gi,
       `<meta property="og:site_name" content="${siteName}"/>`,
-    )
-    .replace(
-      /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/gi,
-      `<meta property="og:title" content="${finalTitle}"/>`,
-    )
-    .replace(
-      /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/gi,
-      `<meta property="og:description" content="${finalDescription}"/>`,
     )
     .replace(/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/gi, `<meta property="og:url" content="${finalUrl}"/>`)
     .replace(/<meta\s+(?:name|property)="apple-itunes-app"[^>]*\/?>/gi, '')
@@ -88,28 +62,56 @@ export function rewriteMetaTags(
       return match;
     });
 
-  if (finalImage) {
+  if (pageImage) {
     result = result
       .replace(
         /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/gi,
-        `<meta property="og:image" content="${finalImage}"/>`,
+        `<meta property="og:image" content="${pageImage}"/>`,
       )
       .replace(
         /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/gi,
-        `<meta name="twitter:image" content="${finalImage}"/>`,
+        `<meta name="twitter:image" content="${pageImage}"/>`,
       );
   }
 
-  if (finalAuthor) {
+  if (pageTitle) {
+    result = result
+      .replace(/<title>[^<]*<\/title>/gi, `<title>${pageTitle}</title>`)
+      .replace(
+        /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/gi,
+        `<meta name="twitter:title" content="${pageTitle}"/>`,
+      )
+      .replace(
+        /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/gi,
+        `<meta property="og:title" content="${pageTitle}"/>`,
+      );
+  }
+  if (pageDescription) {
+    result = result
+      .replace(
+        /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/gi,
+        `<meta name="description" content="${pageDescription}"/>`,
+      )
+      .replace(
+        /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/gi,
+        `<meta name="twitter:description" content="${pageDescription}"/>`,
+      )
+      .replace(
+        /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/gi,
+        `<meta property="og:description" content="${pageDescription}"/>`,
+      );
+  }
+
+  if (pageAuthor) {
     if (/<meta\s+name="article:author"/i.test(result)) {
       result = result.replace(
         /<meta\s+name="article:author"\s+content="[^"]*"\s*\/?>/gi,
-        `<meta name="article:author" content="${finalAuthor}"/>`,
+        `<meta name="article:author" content="${pageAuthor}"/>`,
       );
     } else {
       result = result.replace(
         /(<meta property="og:locale" content="[^"]*"\s*\/?>)/,
-        `$1\n<meta name="article:author" content="${finalAuthor}"/>`,
+        `$1\n<meta name="article:author" content="${pageAuthor}"/>`,
       );
     }
   }
