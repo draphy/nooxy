@@ -1,6 +1,3 @@
-export const HEAD_CSS_STRING = `/* Here you can add your custom css for the notion page*/
-/* Note: Try to keep unique names as it might conflict with notion css */
-
 .nooxyBadge_4f7c2b1a-demo-topbar {
   padding: 12px 20px;
   display: flex;
@@ -66,4 +63,20 @@ export const HEAD_CSS_STRING = `/* Here you can add your custom css for the noti
     gap: 4px !important;
   }
 }
-`
+
+div.notion-topbar,
+div.notion-topbar-mobile {
+  display: none !important;
+}
+
+div[style*="position: absolute; top: 4px;"] {
+  display: none !important;
+}
+
+div[aria-label="Page properties"] + div {
+  display: none !important;
+}
+
+div[role="menuitem"][tabindex="-1"]:has(> div > div > svg.link) {
+  display: none !important;
+}

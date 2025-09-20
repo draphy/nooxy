@@ -1,17 +1,17 @@
-import { NooxySiteConfigFull } from '../types'
+import { NooxySiteConfigFull } from '../types';
 
 export function handleSitemap(siteConfig: NooxySiteConfigFull, protocol: string) {
-  const { domain, slugs } = siteConfig
-  let sitemap = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+  const { domain, slugs } = siteConfig;
+  let sitemap = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
   slugs.forEach((slug) => {
-    sitemap += `<url><loc>${protocol}//${domain}/${slug}</loc></url>`
-  })
-  sitemap += '</urlset>'
+    sitemap += `<url><loc>${protocol}//${domain}/${slug}</loc></url>`;
+  });
+  sitemap += '</urlset>';
 
-  const response = new Response(sitemap)
+  const response = new Response(sitemap);
 
-  response.headers.set('content-type', 'application/xml')
+  response.headers.set('content-type', 'application/xml');
 
-  return response
+  return response;
 }

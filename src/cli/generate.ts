@@ -1,67 +1,92 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'fs';
+import path from 'path';
+import { minifyFile } from '../lib/minify';
 
-export async function generate(customPath?: string) {
-  const rootDir = customPath ? path.resolve(customPath) : process.cwd()
-  const nooxyDir = path.join(rootDir, 'nooxy')
-  const generatedDir = path.join(nooxyDir, 'generated')
+export async function generate(customPath?: string, shouldMinify = true) {
+  const rootDir = customPath ? path.resolve(customPath) : process.cwd();
+  const nooxyDir = path.join(rootDir, 'nooxy');
+  const generatedDir = path.join(nooxyDir, 'generated');
 
-  // Ensure generated directory exists
+  // Create output directory if it doesn't exist
   if (!fs.existsSync(generatedDir)) {
-    fs.mkdirSync(generatedDir)
+    fs.mkdirSync(generatedDir, { recursive: true });
   }
 
   // File paths
-  const headJsPath = path.join(nooxyDir, 'head.js')
-  const bodyJsPath = path.join(nooxyDir, 'body.js')
-  const headCssPath = path.join(nooxyDir, 'head.css')
-  const headerHtmlPath = path.join(nooxyDir, 'header.html')
-  const outHeadJsString = path.join(generatedDir, 'head-js-string.js')
-  const outBodyJsString = path.join(generatedDir, 'body-js-string.js')
-  const outHeadCssString = path.join(generatedDir, 'head-css-string.js')
-  const outHeaderHtmlString = path.join(generatedDir, 'header-html-string.js')
+
+  // Head JS Conversion
+  const headJsPath = path.join(nooxyDir, 'head.js');
+  const outHeadJsString = path.join(generatedDir, '_head-js-string.js');
+  const HEAD_JS_STRING = 'HEAD_JS_STRING';
+
+  // Body JS Conversion
+  const bodyJsPath = path.join(nooxyDir, 'body.js');
+  const outBodyJsString = path.join(generatedDir, '_body-js-string.js');
+  const BODY_JS_STRING = 'BODY_JS_STRING';
+
+  // Head CSS Conversion
+  const headCssPath = path.join(nooxyDir, 'head.css');
+  const outHeadCssString = path.join(generatedDir, '_head-css-string.js');
+  const HEAD_CSS_STRING = 'HEAD_CSS_STRING';
+
+  // Header HTML Conversion
+  const headerHtmlPath = path.join(nooxyDir, 'header.html');
+  const outHeaderHtmlString = path.join(generatedDir, '_header-html-string.js');
+  const HEADER_HTML_STRING = 'HEADER_HTML_STRING';
 
   // Read and write head.js
   try {
-    const headJsContent = fs.readFileSync(headJsPath, 'utf8')
-    const headJsExport = `export const HEAD_JS_STRING = \`${headJsContent.replace(/`/g, '\u0060')}\`\n`
-    fs.writeFileSync(outHeadJsString, headJsExport, 'utf8')
-    console.log(`✅ Generated ${outHeadJsString}`)
+    if (fs.existsSync(headJsPath)) {
+      console.log('🔄 Processing JavaScript file...');
+      minifyFile(headJsPath, outHeadJsString, HEAD_JS_STRING, shouldMinify, 'js');
+    } else {
+      console.log(`⚠️  JavaScript file not found: ${headJsPath}`);
+    }
+    console.log(`✅ Generated ${outHeadJsString}`);
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   } catch (err: any) {
-    console.error(`❌ Failed to process head.js: ${err.message}`)
+    console.error(`❌ Failed to process head.js: ${err.message}`);
   }
 
   // Read and write body.js
   try {
-    const bodyJsContent = fs.readFileSync(bodyJsPath, 'utf8')
-    const bodyJsExport = `export const BODY_JS_STRING = \`${bodyJsContent.replace(/`/g, '\u0060')}\`\n`
-    fs.writeFileSync(outBodyJsString, bodyJsExport, 'utf8')
-    console.log(`✅ Generated ${outBodyJsString}`)
+    if (fs.existsSync(bodyJsPath)) {
+      console.log('🔄 Processing JavaScript file...');
+      minifyFile(bodyJsPath, outBodyJsString, BODY_JS_STRING, shouldMinify, 'js');
+    } else {
+      console.log(`⚠️  JavaScript file not found: ${bodyJsPath}`);
+    }
+    console.log(`✅ Generated ${outBodyJsString}`);
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   } catch (err: any) {
-    console.error(`❌ Failed to process body.js: ${err.message}`)
+    console.error(`❌ Failed to process body.js: ${err.message}`);
   }
 
   // Read and write head.css
   try {
-    const headCssContent = fs.readFileSync(headCssPath, 'utf8')
-    const headCssExport = `export const HEAD_CSS_STRING = \`${headCssContent.replace(/`/g, '\u0060')}\`\n`
-    fs.writeFileSync(outHeadCssString, headCssExport, 'utf8')
-    console.log(`✅ Generated ${outHeadCssString}`)
+    if (fs.existsSync(headCssPath)) {
+      console.log('🔄 Processing CSS file...');
+      minifyFile(headCssPath, outHeadCssString, HEAD_CSS_STRING, shouldMinify, 'css');
+    } else {
+      console.log(`⚠️  CSS file not found: ${headCssPath}`);
+    }
+    console.log(`✅ Generated ${outHeadCssString}`);
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   } catch (err: any) {
-    console.error(`❌ Failed to process head.css: ${err.message}`)
+    console.error(`❌ Failed to process head.css: ${err.message}`);
   }
 
   // Read and write header.html
   try {
-    const headerHtmlContent = fs.readFileSync(headerHtmlPath, 'utf8')
-    const headerHtmlExport = `export const HEADER_HTML_STRING = \`${headerHtmlContent.replace(/`/g, '\u0060')}\`\n`
-    fs.writeFileSync(outHeaderHtmlString, headerHtmlExport, 'utf8')
-    console.log(`✅ Generated ${outHeaderHtmlString}`)
+    if (fs.existsSync(headerHtmlPath)) {
+      console.log('🔄 Processing HTML file...');
+      minifyFile(headerHtmlPath, outHeaderHtmlString, HEADER_HTML_STRING, shouldMinify, 'html');
+    } else {
+      console.log(`⚠️  HTML file not found: ${headerHtmlPath}`);
+    }
+    console.log(`✅ Generated ${outHeaderHtmlString}`);
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   } catch (err: any) {
-    console.error(`❌ Failed to process header.html: ${err.message}`)
+    console.error(`❌ Failed to process header.html: ${err.message}`);
   }
 }

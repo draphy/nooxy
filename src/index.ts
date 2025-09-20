@@ -1,2 +1,2 @@
-export { initializeNooxy } from './proxy'
-export * from './types'
+export { initializeNooxy } from './proxy';
+export * from './types';

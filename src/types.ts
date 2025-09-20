@@ -1,4 +1,4 @@
-export type NooxySiteConfig = Omit<NooxySiteConfigFull, 'slugs' | 'pages' | 'pageToSlug'>
+export type NooxySiteConfig = Omit<NooxySiteConfigFull, 'slugs' | 'pageToSlug'>
 
 export interface NooxySiteConfigFull {
   // Site domain, example.com
@@ -6,24 +6,19 @@ export interface NooxySiteConfigFull {
 
   // Mapping from slug to page ID
   slugToPage: Record<string, string>
-  pageMetadata?: Record<string, NooxySiteConfigPageMetadata>
-
   // SEO metadata
-  // title, og:site_name, article:author
+  pageMetadata?: Record<string, NooxySiteConfigPageMetadata>
+  // og:site_name
   siteName: string
-  // description, og:description, twitter:description
-  siteDescription: string
-  // twitter:site, twitter:creator
+  // twitter:site
   twitterHandle?: string
-  // og:image, twitter:image
-  siteImage?: string
 
   // URL to custom favicon.ico
   siteIcon?: string
 
   // Additional safety: avoid serving extraneous Notion content from your website
   // Use the value from your Notion like example.notion.site
-  notionDomain?: string
+  notionDomain: string
 
   // 404 Notion page to display to visitors, the default slug is '404'
   fof?: {
@@ -38,15 +33,14 @@ export interface NooxySiteConfigFull {
   googleTagID?: string
 
   // Custom CSS/JS to be injected in <head> and <body>
-  customHeadCSS?: string
-  customHeadJS?: string
-  customBodyJS?: string
-  customHeader?: string
+  customHeadCSS: string
+  customHeadJS: string
+  customBodyJS: string
+  customHeader: string
 
   // Calculated fields
   pageToSlug: Record<string, string>
   slugs: Array<string>
-  pages: Array<string>
 }
 
 export interface NooxySiteConfigSubDomainRedirect {

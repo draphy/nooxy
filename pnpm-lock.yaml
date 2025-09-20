@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      htmlrewriter:
-        specifier: ^0.0.7
-        version: 0.0.7
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.4
@@ -1021,9 +1017,6 @@ packages:
   hosted-git-info@8.1.0:
     resolution: {integrity: sha512-Rw/B2DNQaPBICNXEm8balFz9a6WpZrkCGpcWFpy7nCj+NyhSdqXipmfvtmWt9xGfp0wZnBxB+iVpLmQMYt47Tw==}
     engines: {node: ^18.17.0 || >=20.5.0}
-
-  htmlrewriter@0.0.7:
-    resolution: {integrity: sha512-OvSdqGI04ZZm+zzWv+JXRiqn61sFY3ei9sY3HjNCJL7g6LXQH23CENO68hTTxM5xan0P2ENQ8+GTRQwHbPpyvg==}
 
   http-proxy-agent@7.0.2:
     resolution: {integrity: sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig==}
@@ -2880,8 +2873,6 @@ snapshots:
   hosted-git-info@8.1.0:
     dependencies:
       lru-cache: 10.4.3
-
-  htmlrewriter@0.0.7: {}
 
   http-proxy-agent@7.0.2:
     dependencies:

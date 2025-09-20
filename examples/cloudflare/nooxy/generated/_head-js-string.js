@@ -1,0 +1,1 @@
+export const HEAD_JS_STRING = ``;

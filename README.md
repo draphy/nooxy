@@ -4,7 +4,7 @@
 
 <img src="https://raw.githubusercontent.com/draphy/public-assets/main/nooxy/logo.png" alt="Nooxy Logo" width="140" />
 
-**A free and powerful Notion Reverse Proxy with advanced customization features**
+**A free, zero dependency Notion Reverse Proxy with advanced customization features**
 
 [![npm version](https://img.shields.io/npm/v/nooxy?style=flat-square)](https://www.npmjs.com/package/nooxy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
@@ -15,18 +15,20 @@
 
 ## 🚀 What is Nooxy?
 
-Nooxy is a modern, open-source Notion reverse proxy that allows you to host your Notion pages on your own custom domain with complete control over customization. Built with TypeScript and designed for Cloudflare Workers and modern Node.js runtimes (22+), Nooxy provides a powerful alternative to Notion's expensive custom domain feature.
+Nooxy is a modern, open-source, zero dependency Notion reverse proxy that allows you to host your Notion pages on your own custom domain with complete control over customization. Built with TypeScript and designed for Cloudflare Workers and modern Node.js runtimes, Nooxy provides a powerful alternative to Notion's expensive custom domain feature.
 
 ### Why Nooxy?
 
 Notion's custom domain feature is expensive and offers limited customization control. Nooxy solves this by providing:
 
 - **💰 Completely Free** - No monthly fees or usage limits
-- **🎨 Full Customization** - Inject custom CSS, JavaScript, and HTML
+- **📦 Zero Dependencies** - No external dependencies, lightweight and fast
+- **🎨 Full Customization** - Inject custom CSS, JavaScript, and HTML with metadata customization
 - **🔧 Local Development** - Test your site locally before deployment
-- **⚡ High Performance** - Specially Built for Cloudflare Workers edge computing and modern Node.js runtimes (22+)
+- **⚡ High Performance** - Specially Built for Cloudflare Workers edge computing and modern Node.js runtimes
 - **🛠️ Developer Friendly** - CLI tools, TypeScript support, and extensive configuration options
 - **🔗 Seamless Navigation** - Proper URL rewriting and internal link handling
+- **📊 SEO & Metadata** - Advanced metadata customization for better search engine optimization
 
 ## ✨ Key Features
 
@@ -90,7 +92,7 @@ Nooxy provides sophisticated URL rewriting that handles:
 ### 🎛️ **CLI Tooling**
 
 - `npx nooxy init` - Initialize configuration files in a `nooxy/` folder at project root
-- `npx nooxy generate [--path=/absolute/or/relative/path]` - Generate required string files from a custom path (defaults to current working directory). The configuration folder name must be `nooxy`.
+- `npx nooxy generate [--path=/absolute/or/relative/path] [--no-minify]` - Generate minified string files from a custom path (defaults to current working directory). The configuration folder name must be `nooxy`.
 
 ### 🎨 **Custom Header Support**
 
@@ -98,19 +100,24 @@ Nooxy provides sophisticated URL rewriting that handles:
 - Complete control over the top navigation bar
 - Responsive design with mobile optimization
 
-### ⚡ **Optimized Caching**
+### ⚡ **Optimized Caching & Performance**
 
 - Smart configuration caching for better performance
 - Multiple instance support for different environments
 - Efficient memory usage
+- **Zero dependencies** for minimal bundle size and fast loading
+- **Automatic minification** of custom CSS, JavaScript, and HTML files
+- **Advanced minification** that preserves functionality while reducing file sizes
 
 ### 🔧 **Advanced Customization**
 
+- **Required custom files**: CSS, JavaScript, and HTML injection for complete control
 - Custom CSS injection for styling
-- JavaScript injection for functionality
+- JavaScript injection for functionality (both head and body)
 - HTML header customization
-- Google Fonts integration
-- Google Analytics support
+- **Metadata customization**: Page-specific SEO metadata, Open Graph tags, Twitter cards, and JSON-LD structured data
+- Optional Google Fonts integration
+- Optional Google Analytics support
 
 ### 🛡️ **Enhanced Security**
 
@@ -118,11 +125,27 @@ Nooxy provides sophisticated URL rewriting that handles:
 - Blocked problematic Notion requests
 - Content Security Policy management
 
+### 📊 **Advanced Metadata Customization**
+
+- **Page-specific SEO**: Customize title, description, and Open Graph tags for each page
+- **Social Media Optimization**: Twitter cards and Facebook Open Graph metadata
+- **JSON-LD Structured Data**: Automatic generation of structured data for better search visibility
+- **SEO Optimization**: Enhanced search engine optimization with customizable meta tags
+
+### 📦 **Zero Dependencies**
+
+- **No External Dependencies**: Zero runtime dependencies for maximum compatibility
+- **Minimal Bundle Size**: Ultra-lightweight package for fast loading
+- **Security**: No third-party dependencies means fewer security vulnerabilities
+- **Reliability**: No dependency conflicts or version mismatches
+- **Performance**: Faster cold starts and reduced memory usage
+- **Deployment**: Easy deployment to any environment without dependency management
+
 ## 📦 Installation
 
 ### Prerequisites
 
-- Node.js 22.0.0 or higher
+- Node.js
 - A Cloudflare account (for deployment)
 - A custom domain (optional, for production)
 
@@ -135,6 +158,8 @@ pnpm add nooxy
 # or
 yarn add nooxy
 ```
+
+**Zero Dependencies**: Nooxy has no runtime dependencies, making it lightweight and fast to install.
 
 ## 🚀 Quick Start
 
@@ -154,10 +179,10 @@ nooxy/
 ├── head.css           # Custom CSS styles
 ├── header.html        # Custom HTML header
 └── generated/         # Auto-generated files (created after running generate)
-    ├── head-js-string.js
-    ├── body-js-string.js
-    ├── head-css-string.js
-    └── header-html-string.js
+    ├── _head-js-string.js
+    ├── _body-js-string.js
+    ├── _head-css-string.js
+    └── _header-html-string.js
 ```
 
 ### 2. Configure Your Site
@@ -165,60 +190,61 @@ nooxy/
 Edit `nooxy/config.js`:
 
 ```javascript
-import { HEAD_JS_STRING } from './generated/head-js-string.js';
-import { BODY_JS_STRING } from './generated/body-js-string.js';
-import { HEAD_CSS_STRING } from './generated/head-css-string.js';
-import { HEADER_HTML_STRING } from './generated/header-html-string.js';
+import { HEAD_JS_STRING } from './generated/_head-js-string.js';
+import { BODY_JS_STRING } from './generated/_body-js-string.js';
+import { HEAD_CSS_STRING } from './generated/_head-css-string.js';
+import { HEADER_HTML_STRING } from './generated/_header-html-string.js';
 
 /** @type {import('nooxy').NooxySiteConfig} */
 export const SITE_CONFIG = {
+  // Site domain, example.com
   domain: 'your-domain.com',
 
-  // Basic site information
-  siteName: 'Your Site Name',
-  siteDescription: 'Your site description for SEO',
-  siteImage: 'https://your-domain.com/og-image.jpg',
-  siteIcon: 'https://your-domain.com/favicon.ico',
-
-  // Notion configuration
-  notionDomain: 'your-workspace.notion.site', // Optional: your Notion workspace domain
-
-  // Page mapping
+  // Map slugs (short page names) to Notion page IDs
+  // '/' slug is your root page
   slugToPage: {
-    '': 'NOTION_HOME_PAGE_ID', // Homepage
-    about: 'NOTION_ABOUT_PAGE_ID', // /about
-    contact: 'NOTION_CONTACT_PAGE_ID', // /contact
-    'blog/post-1': 'NOTION_BLOG_POST_ID', // Nested pages
+    '/': 'NOTION_HOME_PAGE_ID',
+    // '/contact': 'NOTION_PAGE_ID',
+    // '/about': 'NOTION_PAGE_ID',
+    // Hint: you can use '/' in slug name to create subpages
+    // '/about/people': 'NOTION_PAGE_ID',
   },
 
-  // Page-specific metadata
-  pageMetadata: {
-    NOTION_ABOUT_PAGE_ID: {
-      title: 'About Us - Custom Title',
-      description: 'Learn more about our company',
-      image: 'https://your-domain.com/about-og.jpg',
-      author: 'Your Name',
-    },
-  },
+  // SEO metadata
+  siteName: 'Your Site Name',
 
-  // Subdomain redirects
-  subDomains: {
-    www: {
-      redirect: 'https://your-domain.com',
-    },
-  },
+  // Additional safety: avoid serving extraneous Notion content from your website
+  // Use the value from your Notion like example.notion.site
+  notionDomain: 'example.notion.site',
 
-  // 404 page
-  fof: {
-    page: 'NOTION_404_PAGE_ID',
-    slug: '404',
-  },
+  // Optional: Page-specific metadata customization for SEO
+  // pageMetadata: {
+  //   'NOTION_PAGE_ID': {
+  //     title: 'My Custom Page Title',
+  //     description: 'My custom page description',
+  //     image: 'https://imagehosting.com/images/page_preview.jpg',
+  //     author: 'My Name',
+  //   },
+  // },
 
-  // Customization
-  googleFont: 'Roboto',
-  googleTagID: 'GA_MEASUREMENT_ID',
+  // Optional: 404 page configuration
+  // fof: {
+  //   page: "NOTION_PAGE_ID",
+  //   slug: "404", // default
+  // },
 
-  // Custom content
+  // Optional: Subdomain redirects
+  // subDomains: {
+  //   www: {
+  //     redirect: 'https://your-domain.com',
+  //   },
+  // },
+
+  // Optional: Google Font and Analytics
+  // googleFont: 'Roboto',
+  // googleTagID: 'GOOGLE_TAG_ID',
+
+  // Required: Custom JS, CSS, HTML for head and body of a Notion page
   customHeadCSS: HEAD_CSS_STRING,
   customHeadJS: HEAD_JS_STRING,
   customBodyJS: BODY_JS_STRING,
@@ -234,9 +260,12 @@ npx nooxy generate
 
 # Or specify a custom path that contains the `nooxy/` folder
 npx nooxy generate --path=./examples/cloudflare
+
+# Disable minification (optional)
+npx nooxy generate --no-minify
 ```
 
-This reads files from `<path-or-cwd>/nooxy/{head.js,body.js,head.css,header.html}` and converts them into string constants under `<path-or-cwd>/nooxy/generated/`.
+This reads files from `<path-or-cwd>/nooxy/{head.js,body.js,head.css,header.html}` and converts them into minified string constants under `<path-or-cwd>/nooxy/generated/`. The generated files are automatically minified for optimal performance.
 
 ### 4. Deploy to Cloudflare Workers or run in Node.js
 
@@ -255,7 +284,7 @@ export default {
 } satisfies ExportedHandler<Env>;
 ```
 
-Or use in a modern Node.js 22+ runtime (e.g., express-like frameworks that support `Request`/`Response` or via polyfills):
+Or use in a modern Node.js runtime (e.g., express-like frameworks that support `Request`/`Response` or via polyfills):
 
 ```ts
 import { initializeNooxy } from 'nooxy';
@@ -283,49 +312,42 @@ server.listen(8787, () =>
 
 ### Core Configuration
 
-| Field             | Type                     | Required | Description                              |
-| ----------------- | ------------------------ | -------- | ---------------------------------------- |
-| `domain`          | `string`                 | ✅       | Your custom domain (e.g., `example.com`) |
-| `siteName`        | `string`                 | ✅       | Site name for SEO and social sharing     |
-| `siteDescription` | `string`                 | ✅       | Site description for SEO                 |
-| `slugToPage`      | `Record<string, string>` | ✅       | Mapping of URL slugs to Notion page IDs  |
+| Field          | Type                     | Required | Description                              |
+| -------------- | ------------------------ | -------- | ---------------------------------------- |
+| `domain`       | `string`                 | ✅       | Your custom domain (e.g., `example.com`) |
+| `siteName`     | `string`                 | ✅       | Site name for SEO and social sharing     |
+| `slugToPage`   | `Record<string, string>` | ✅       | Mapping of URL slugs to Notion page IDs  |
+| `notionDomain` | `string`                 | ✅       | Your Notion workspace domain             |
 
-### SEO & Metadata
+### Required Customization
 
-| Field           | Type                           | Required | Description                                    |
-| --------------- | ------------------------------ | -------- | ---------------------------------------------- |
-| `siteImage`     | `string`                       | ❌       | Default Open Graph image URL                   |
-| `siteIcon`      | `string`                       | ❌       | Custom favicon URL                             |
-| `twitterHandle` | `string`                       | ❌       | X (formerly Twitter) handle for social sharing |
-| `pageMetadata`  | `Record<string, PageMetadata>` | ❌       | Page-specific metadata overrides               |
+| Field           | Type     | Required | Description                    |
+| --------------- | -------- | -------- | ------------------------------ |
+| `customHeadCSS` | `string` | ✅       | Custom CSS for `<head>`        |
+| `customHeadJS`  | `string` | ✅       | Custom JavaScript for `<head>` |
+| `customBodyJS`  | `string` | ✅       | Custom JavaScript for `<body>` |
+| `customHeader`  | `string` | ✅       | Custom HTML header content     |
 
-### Navigation & URLs
+### Optional Configuration
 
-| Field          | Type                                | Required | Description                      |
-| -------------- | ----------------------------------- | -------- | -------------------------------- |
-| `notionDomain` | `string`                            | ❌       | Your Notion workspace domain     |
-| `subDomains`   | `Record<string, SubDomainRedirect>` | ❌       | Subdomain redirect configuration |
-| `fof`          | `FofConfig`                         | ❌       | 404 page configuration           |
-
-### Customization
-
-| Field           | Type     | Required | Description                     |
-| --------------- | -------- | -------- | ------------------------------- |
-| `googleFont`    | `string` | ❌       | Google Font family name         |
-| `googleTagID`   | `string` | ❌       | Google Analytics measurement ID |
-| `customHeadCSS` | `string` | ❌       | Custom CSS for `<head>`         |
-| `customHeadJS`  | `string` | ❌       | Custom JavaScript for `<head>`  |
-| `customBodyJS`  | `string` | ❌       | Custom JavaScript for `<body>`  |
-| `customHeader`  | `string` | ❌       | Custom HTML header content      |
+| Field           | Type                                | Required | Description                                    |
+| --------------- | ----------------------------------- | -------- | ---------------------------------------------- |
+| `pageMetadata`  | `Record<string, PageMetadata>`      | ❌       | Page-specific metadata customization for SEO   |
+| `siteIcon`      | `string`                            | ❌       | Custom favicon URL                             |
+| `twitterHandle` | `string`                            | ❌       | X (formerly Twitter) handle for social sharing |
+| `subDomains`    | `Record<string, SubDomainRedirect>` | ❌       | Subdomain redirect configuration               |
+| `fof`           | `FofConfig`                         | ❌       | 404 page configuration                         |
+| `googleFont`    | `string`                            | ❌       | Google Font family name                        |
+| `googleTagID`   | `string`                            | ❌       | Google Analytics measurement ID                |
 
 ### Page Metadata Interface
 
 ```typescript
 interface PageMetadata {
-  title?: string; // Page title override
-  description?: string; // Page description override
-  image?: string; // Page-specific Open Graph image
-  author?: string; // Page author
+  title?: string; // Page title customization for SEO
+  description?: string; // Page description customization for SEO
+  image?: string; // Page-specific Open Graph image customization
+  author?: string; // Page author metadata customization
 }
 ```
 
@@ -342,14 +364,15 @@ Creates the initial configuration files in a `nooxy` directory at the project ro
 ### Generate String Files
 
 ```bash
-npx nooxy generate [--path=/custom/path]
+npx nooxy generate [--path=/custom/path] [--no-minify]
 ```
 
-Converts your custom files (`head.js`, `body.js`, `head.css`, `header.html`) into importable string constants under `<path-or-cwd>/nooxy/generated/`.
+Converts your custom files (`head.js`, `body.js`, `head.css`, `header.html`) into minified importable string constants under `<path-or-cwd>/nooxy/generated/`.
 
 **Options:**
 
 - `--path`: Specify a custom directory path that contains a `nooxy/` folder
+- `--no-minify`: Disable automatic minification of generated files
 
 ## 🎨 Customization Guide
 
@@ -432,6 +455,61 @@ Edit `nooxy/header.html` for custom header content:
 </div>
 ```
 
+### 🚀 **Automatic Minification**
+
+Nooxy automatically minifies your custom files during generation for optimal performance:
+
+- **JavaScript minification**: Removes comments, unnecessary whitespace, and optimizes code
+- **CSS minification**: Removes comments, optimizes selectors, and compresses styles
+- **HTML minification**: Removes unnecessary whitespace while preserving functionality
+- **Smart preservation**: Protects important content like URLs, strings, and script tags
+- **Size reduction**: Typically achieves 20-40% file size reduction
+
+To disable minification, use the `--no-minify` flag:
+
+```bash
+npx nooxy generate --no-minify
+```
+
+### 📊 **Metadata Customization**
+
+Nooxy provides advanced metadata customization for better SEO and social media sharing:
+
+#### Page-Specific Metadata
+
+Configure custom metadata for individual pages using the `pageMetadata` option:
+
+```javascript
+// In your config.js
+export const SITE_CONFIG = {
+  // ... other config
+  pageMetadata: {
+    NOTION_PAGE_ID: {
+      title: 'Custom Page Title - Your Site',
+      description: 'Custom page description for SEO',
+      image: 'https://your-domain.com/custom-og-image.jpg',
+      author: 'Your Name',
+    },
+  },
+};
+```
+
+#### SEO Benefits
+
+- **Search Engine Optimization**: Custom titles and descriptions for better search rankings
+- **Social Media Sharing**: Custom Open Graph images and descriptions for Twitter, Facebook, LinkedIn
+- **Structured Data**: Automatic JSON-LD generation for rich snippets
+- **Dynamic Content**: Real-time metadata rewriting based on page content
+
+#### Supported Metadata
+
+- **Title Tags**: Custom page titles for search engines
+- **Meta Descriptions**: Custom descriptions for search results
+- **Open Graph**: Facebook, LinkedIn sharing optimization
+- **Twitter Cards**: Twitter sharing optimization
+- **Author Information**: Page author metadata
+- **Custom Images**: Page-specific social media images
+
 ## 🏗️ Architecture Overview
 
 ### Core Components
@@ -456,7 +534,9 @@ src/
 ├── rewriters/            # HTML content rewriting
 │   ├── body-rewriter.ts  # Body content rewriting
 │   ├── head-rewriter.ts  # Head content rewriting
-│   ├── meta-rewriter.ts  # Meta tag rewriting
+│   ├── meta-rewriter.ts  # Meta tag rewriting and metadata customization
+│   ├── data-rewriter.ts  # Data rewriting and metadata injection
+│   ├── header-rewriter.ts # Header rewriting and metadata handling
 │   ├── body.js           # Client-side JavaScript
 │   └── _body-js-string.ts # Generated body JS string
 └── cli/                  # Command-line interface
@@ -477,16 +557,19 @@ src/
 2. **URL Mapping**: Maps clean URLs to Notion page IDs using your configuration
 3. **Content Fetching**: Fetches content from Notion's servers
 4. **HTML Rewriting**: Uses HTMLRewriter to modify the content in real-time
-5. **Response Delivery**: Serves the modified content to your visitors
+5. **Metadata Customization**: Rewrites meta tags, Open Graph, Twitter cards, and JSON-LD structured data
+6. **Response Delivery**: Serves the modified content to your visitors
 
 ### Notable Differences
 
 Nooxy is inspired by [Fruition](https://github.com/stephenou/fruitionsite) and [NoteHost](https://github.com/velsa/notehost) but, Nooxy adds:
 
 - A maintained TypeScript package API for embedding into different runtimes
+- **Zero dependencies** for minimal bundle size and fast deployment
 - CLI with `init` (scaffold config) and `generate` (convert custom files to strings), with `--path` support on generate
 - Multi-instance configuration with caching keyed by `configKey` for multi-tenant or multi-env setups
 - Robust HTML rewriting for head, meta, and body plus helpers for Google Fonts and Analytics
+- **Advanced metadata customization** with page-specific SEO, Open Graph, Twitter cards, and JSON-LD structured data
 - Client-side navigation and href rewriting that keeps users on your domain and preserves slugs, with XHR guardrails
 - Optional custom favicon proxying and automatic sitemap generation
 - Local development detection with domain normalization for a smooth localhost experience
@@ -518,6 +601,7 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines, development s
 - Run `npx nooxy generate` after making CSS changes
 - Check that your CSS selectors are specific enough
 - Use `!important` for overriding Notion's styles
+- Ensure `customHeadCSS` is properly set in your config
 
 #### 3. JavaScript Not Working
 
@@ -528,8 +612,19 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines, development s
 - Ensure your JavaScript is in the correct file (`head.js` or `body.js`)
 - Run `npx nooxy generate` after making changes
 - Check browser console for errors
+- Ensure `customHeadJS` and `customBodyJS` are properly set in your config
 
-#### 4. Local Development Issues
+#### 4. Configuration Errors
+
+**Problem**: Getting errors about missing required fields.
+
+**Solution**:
+
+- Ensure all required fields are set: `domain`, `siteName`, `slugToPage`, `notionDomain`, `customHeadCSS`, `customHeadJS`, `customBodyJS`, `customHeader`
+- Run `npx nooxy generate` to create the required string files
+- Check that your `nooxy/` folder contains all template files
+
+#### 5. Local Development Issues
 
 **Problem**: Local development server not working.
 
@@ -564,19 +659,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Featured Examples
 
-- **Portfolio Sites**: Perfect for developer portfolios and personal websites
-- **Documentation**: Great for technical documentation and wikis
-- **Blogs**: Excellent for personal and professional blogs
-- **Landing Pages**: Ideal for product landing pages and marketing sites
+- **Portfolio Sites**: Perfect for developer portfolios and personal websites with metadata customization
+- **Documentation**: Great for technical documentation and wikis with SEO optimization
+- **Blogs**: Excellent for personal and professional blogs with custom metadata
+- **Landing Pages**: Ideal for product landing pages and marketing sites with advanced SEO
 
 ## 📊 Performance
 
 Nooxy is built for performance:
 
 - **Edge Computing**: Runs on Cloudflare's global edge network
+- **Zero Dependencies**: No external dependencies for minimal bundle size
 - **Optimized Caching**: Smart configuration caching reduces overhead
 - **Minimal Bundle Size**: Lightweight and fast
 - **TypeScript**: Type safety and better performance
+- **Metadata Optimization**: Advanced SEO metadata customization for better search rankings
 
 ## 📦 Examples
 

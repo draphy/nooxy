@@ -1,7 +1,7 @@
 {
   "name": "nooxy",
   "version": "0.0.0-development",
-  "description": "Free Notion reverse proxy for custom domains with seamless in-domain navigation for inner Notion pages, full HTML/CSS/JS customization, multi-instance support, CLI tools, and local development support. Built for Cloudflare Workers and modern Node.js runtimes. Transform your Notion pages into professional websites with complete control over styling, SEO, and functionality - no monthly fees required.",
+  "description": "Zero dependency Notion reverse proxy for custom domains with seamless in-domain navigation for inner Notion pages, full HTML/CSS/JS customization, multi-instance support, CLI tools, and local development support. Built for Cloudflare Workers and modern Node.js runtimes. Transform your Notion pages into professional websites with complete control over styling, SEO, and functionality - no monthly fees required.",
   "private": false,
   "repository": {
     "type": "git",
@@ -26,7 +26,10 @@
     "proxy",
     "static-site",
     "website-builder",
-    "seo"
+    "seo",
+    "zero-dependency",
+    "zero-dependencies",
+    "lightweight"
   ],
   "author": {
     "name": "David Raphi",
@@ -60,7 +63,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node build-body-js-string.js",
+    "prebuild": "node converter.js && pnpm biome:fix ",
     "build": "pnpm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist && pnpm run build:cli",
     "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli && cp -r src/cli/templates dist/cli/",
     "biome:lint": "biome lint .",
@@ -72,9 +75,6 @@
     "type:check": "tsc  --noEmit",
     "commit:check": "pnpm biome:check && pnpm type:check && pnpm build",
     "semantic-release": "semantic-release"
-  },
-  "dependencies": {
-    "htmlrewriter": "^0.0.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

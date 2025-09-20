@@ -12,4 +12,4 @@ module.exports = {
     ],
   ],
   tagFormat: 'nooxy@${version}',
-}
+};

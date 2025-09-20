@@ -1,7 +1,7 @@
 export async function handleFavicon(siteIcon: string) {
-  const response = await fetch(siteIcon)
-  const body = await response.arrayBuffer()
-  const ret = new Response(body, response)
+  const response = await fetch(siteIcon);
+  const body = await response.arrayBuffer();
+  const ret = new Response(body, response);
 
-  return ret
+  return ret;
 }
