@@ -2,7 +2,7 @@ function buildCustomHeader(customHeader) {
   return `
   <div class="nooxyBadge_4f7c2b1a-demo-topbar">
   ${customHeader ?? ''}
-  <a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0">
+  <a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0" target="_blank" rel="noopener noreferrer">
     <!-- Subtle shine effect -->
     <span class="nooxyBadge_4f7c2b1a-badge-shine"></span>
     <!-- Sparkle icon -->
