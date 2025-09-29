@@ -21,13 +21,18 @@ export function modifyResponseHeaders(headers: Headers, hostname: string): Heade
   // Handle CSP
   const csp = headers.get('content-security-policy');
   if (csp) {
-    const modifiedCsp = csp
+    let modifiedCsp = csp
       .replace(
         /(?=(script-src|connect-src) )[^;]*/g,
         '$& https://www.googletagmanager.com https://www.google-analytics.com',
       )
       .replace(/(?=(style-src) )[^;]*/g, '$& https://fonts.googleapis.com')
-      .replace(/(?=(font-src) )[^;]*/g, '$& https://fonts.gstatic.com');
+      .replace(/(?=(font-src) )[^;]*/g, '$& https://fonts.gstatic.com')
+      .replace(/frame-ancestors[^;]*/g, 'frame-ancestors *');
+    // Force frame-ancestors to *
+    if (!/frame-ancestors/.test(modifiedCsp)) {
+      modifiedCsp += '; frame-ancestors *';
+    }
     newHeaders.set('content-security-policy', modifiedCsp);
   }
 
