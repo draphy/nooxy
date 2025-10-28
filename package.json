@@ -33,7 +33,7 @@
   ],
   "author": {
     "name": "David Raphi",
-    "email": "davidraphi@proton.me"
+    "email": "david@draphy.org"
   },
   "engines": {
     "node": ">=22.0.0"

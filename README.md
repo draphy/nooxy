@@ -718,7 +718,7 @@ This repository includes runnable examples:
 **Made with ❤️ by [David Raphi](https://github.com/draphy)**
 
 [![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/draphy)
-[![X](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/its_draphy)
+[![X](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/draphyofficial)
 [![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge)](mailto:contact@draphy.org)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/draphy)
 
