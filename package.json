@@ -36,7 +36,7 @@
     "email": "david@draphy.org"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=18.17.0"
   },
   "license": "MIT",
   "publishConfig": {
@@ -63,7 +63,7 @@
     }
   },
   "scripts": {
-    "prebuild": "node converter.js && pnpm biome:fix ",
+    "prebuild": "node converter.js && pnpm biome:fix",
     "build": "pnpm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist && pnpm run build:cli",
     "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli && cp -r src/cli/templates dist/cli/",
     "biome:lint": "biome lint .",
