@@ -88,16 +88,15 @@ export function isNotion404(pathname: string, slugToPage: Record<string, string>
   ) {
     return false;
   }
-  const lastSlashIndex = pathname.lastIndexOf('/');
-  const slugSlash = lastSlashIndex === -1 ? pathname : pathname.slice(lastSlashIndex + 1);
-  const lastHyphenIndex = slugSlash.lastIndexOf('-');
-  const slug = lastHyphenIndex === -1 ? slugSlash : slugSlash.slice(lastHyphenIndex + 1);
-  if (!slug) {
+  const lastSlash = pathname.slice(pathname.lastIndexOf('/') + 1);
+  const pageId = lastSlash.slice(lastSlash.lastIndexOf('-') + 1);
+  const slug = extractSlug(pathname);
+  if (!pageId && !slug) {
     return false;
   }
-  const page = slugToPage[`/${slug}`];
-  const notValidSlug = slug.length !== 32;
-  if (!page && notValidSlug) {
+  const page = slugToPage[slug ?? ''];
+  const validPageId = pageId.length === 32;
+  if (!page && !validPageId) {
     return true;
   }
   return false;

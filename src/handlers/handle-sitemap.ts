@@ -5,7 +5,7 @@ export function handleSitemap(siteConfig: NooxySiteConfigFull, protocol: string)
   let sitemap = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
   slugs.forEach((slug) => {
-    sitemap += `<url><loc>${protocol}//${domain}/${slug}</loc></url>`;
+    sitemap += `<url><loc>${protocol}//${domain}${slug}</loc></url>`;
   });
   sitemap += '</urlset>';
 
