@@ -42,7 +42,7 @@ export const SITE_CONFIG = {
   // If you don't have one, the default 404 page will be used
   // fof: {
   //   page: "NOTION_PAGE_ID",
-  //   slug: "404", // default
+  //   slug: "/404", // default
   // },
   // Subdomain redirects are optional
   // But it is recommended to have one for www

@@ -40,11 +40,11 @@ export class ConfigManager {
 
     siteConfig.fof = {
       page: siteConfig.fof?.page,
-      slug: siteConfig.fof?.slug || '404',
+      slug: siteConfig.fof?.slug || '/404',
     };
 
     if (siteConfig.fof.page?.length) {
-      siteConfig.slugToPage[siteConfig.fof.slug ?? ''] = siteConfig.fof.page;
+      siteConfig.slugToPage[siteConfig.fof.slug ?? '/404'] = siteConfig.fof.page;
     }
 
     // Build helper indexes
