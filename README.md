@@ -145,7 +145,7 @@ Nooxy provides sophisticated URL rewriting that handles:
 
 ### Prerequisites
 
-- Node.js
+- Node.js 18.17.0 or higher
 - A Cloudflare account (for deployment)
 - A custom domain (optional, for production)
 
@@ -230,7 +230,7 @@ export const SITE_CONFIG = {
   // Optional: 404 page configuration
   // fof: {
   //   page: "NOTION_PAGE_ID",
-  //   slug: "404", // default
+  //   slug: "/404", // default
   // },
 
   // Optional: Subdomain redirects
@@ -660,7 +660,7 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines, development s
 
 **Solution**:
 
-- Ensure you're using Node.js 22.0.0 or higher
+- Ensure you're using Node.js 18.17.0 or higher
 - Check that your `wrangler.toml` is configured correctly
 - Verify your Notion pages are accessible
 
