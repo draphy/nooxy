@@ -16,6 +16,6 @@
 		"wrangler": "^4.32.0"
 	},
 	"dependencies": {
-		"nooxy": "^1.5.1"
+		"nooxy": "^1.6.0"
 	}
 }
