@@ -60,9 +60,20 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Release
+      - name: Semantic Release
+        id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # npm OIDC trusted publishing - no NPM_TOKEN needed
-          # Authentication is handled automatically via OIDC
         run: pnpm semantic-release
+
+      - name: Publish to npm with OIDC
+        if: steps.semantic.outcome == 'success'
+        run: |
+          # Check if package.json version was updated (not 0.0.0-development)
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$VERSION" != "0.0.0-development" ]; then
+            echo "Publishing version $VERSION to npm with OIDC provenance..."
+            npm publish --provenance --access public
+          else
+            echo "No new version to publish"
+          fi
