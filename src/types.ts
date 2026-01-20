@@ -38,9 +38,43 @@ export interface NooxySiteConfigFull {
   customBodyJS: string
   customHeader: string
 
+  // SEO configuration
+  seo?: NooxySeoConfig
+
   // Calculated fields
   pageToSlug: Record<string, string>
   slugs: Array<string>
+}
+
+// SEO configuration
+export interface NooxySeoConfig {
+  // Enable search engine indexing (removes noindex, adds canonical URL, adds robots meta)
+  // Default: true
+  indexing?: boolean
+
+  // Canonical domain - if set, all SEO URLs (canonical, og:url, etc.) point to this domain
+  // Useful when nooxy runs on a subdomain but SEO should point to main domain
+  // Example: nooxy on "os.example.com" but canonical URLs point to "example.com"
+  canonicalDomain?: string
+
+  // Path mapping for canonical domain
+  // Maps paths from nooxy domain to canonical domain
+  // Example: { '/': '/home' } means os.example.com/ -> example.com/home
+  canonicalPathMap?: Record<string, string>
+
+  // Meta keywords for SEO
+  keywords?: string
+
+  // Default author for pages without specific author in pageMetadata
+  defaultAuthor?: string
+
+  // Replace "Notion" branding in meta tags with custom value
+  // Default: uses siteName
+  brandReplacement?: string
+
+  // AI crawler attribution - adds ai:source_url and ai:source_attribution meta tags
+  // Helps AI systems (ChatGPT, Claude, etc.) properly attribute content
+  aiAttribution?: string
 }
 
 export interface NooxySiteConfigSubDomainRedirect {

@@ -105,6 +105,6 @@ export function isNotion404(pathname: string, slugToPage: Record<string, string>
 // Helper function to extract page ID from pathname
 export function extractPageId(input: string) {
   const path = input.split('?')[0];
-  const match = path?.match(/([a-fA-F0-9]{32})(?=\/?$)/);
-  return match?.[1] ? match[1] : '';
+  const match = path?.match(/([a-f0-9]{32})(?=\/?$)/i);
+  return match?.[1] ? match[1].toLowerCase() : '';
 }

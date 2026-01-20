@@ -4,6 +4,18 @@ import { HEAD_JS_STRING } from './custom/generated/_head-js-string';
 import { HEAD_CSS_STRING } from './custom/generated/_head-css-string';
 import { rewriteMetaTags } from './meta-rewriter';
 
+function escapeForJS(str: string): string {
+  return str
+    .replace(/\\/g, '\\\\') // Escape backslashes first
+    .replace(/'/g, "\\'") // Escape single quotes
+    .replace(/"/g, '\\"') // Escape double quotes
+    .replace(/\n/g, '\\n') // Escape newlines
+    .replace(/\r/g, '\\r') // Escape carriage returns
+    .replace(/\t/g, '\\t') // Escape tabs
+    .replace(/</g, '\\x3c') // Escape < to prevent </script> injection
+    .replace(/>/g, '\\x3e'); // Escape > for safety
+}
+
 // Helper function to modify response data
 export function modifyResponseData(
   responseData: string,
@@ -12,6 +24,7 @@ export function modifyResponseData(
   protocol: string,
 ): string {
   const {
+    domain,
     notionDomain,
     slugToPage,
     pageToSlug,
@@ -21,13 +34,17 @@ export function modifyResponseData(
     customHeadJS,
     customBodyJS,
     googleFont,
+    seo,
   } = siteConfig;
   let data = responseData;
   const notionDomainUrl = new URL(ensureHttpsUrl(notionDomain)).origin;
-  const customJSCode = `var notionDomain='${notionDomainUrl}',slugToPage=${JSON.stringify(slugToPage)},pageToSlug=${JSON.stringify(pageToSlug)},customHeader='${customHeader}';${HEAD_JS_STRING}`;
+
+  const targetDomain = seo?.canonicalDomain || domain;
+  const safeCustomHeader = escapeForJS(customHeader || '');
+  const customJSCode = `var notionDomain='${notionDomainUrl}',slugToPage=${JSON.stringify(slugToPage)},pageToSlug=${JSON.stringify(pageToSlug)},customHeader='${safeCustomHeader}';${HEAD_JS_STRING}`;
   const googleFontInject = googleFont
     ? `<link href='https://fonts.googleapis.com/css?family=${googleFont.replace(
-        ' ',
+        / /g,
         '+',
       )}:Regular,Bold,Italic&display=swap' rel='stylesheet'>
           <style>* { font-family: "${googleFont}" !important; }</style>`
@@ -65,17 +82,26 @@ export function modifyResponseData(
   //   // console.log('[DEBUG]', pathname, found);
   // }
 
+  // IMPORTANT: This must happen BEFORE script injection to avoid replacing the notionDomain variable
+  const escapedNotionDomain = notionDomain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const notionDomainPattern = new RegExp(`https?://${escapedNotionDomain}(?=[/?"'>#\\s]|$)`, 'gi');
+
   if (/^\/_assets\/[^/]*\.js$/.test(pathname)) {
     data = data.replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()'); // Exclude 'window.location.href=' but not 'window.location.href=='
-  } else if (data.includes('<html') || data.includes('<!DOCTYPE')) {
-    // Assume HTML
-    // Apply meta tag rewriting
-    data = rewriteMetaTags(data, pathname, siteConfig, protocol)
+  } else if (/<html/i.test(data) || /<!DOCTYPE/i.test(data)) {
+    // Assume HTML (case-insensitive check for <html> and <!DOCTYPE>)
+    // Apply meta tag rewriting first
+    data = rewriteMetaTags(data, pathname, siteConfig, protocol);
+
+    // Replace notion domain URLs in the original HTML content (before script injection)
+    data = data.replace(notionDomainPattern, `${protocol}//${targetDomain}`);
+
+    data = data
       .replace(
-        '</head>',
+        /<\/head>/i,
         `${googleFontInject}<script>${customHeadJS}</script><script>${customJSCode}</script><style>${customHeadCSS}</style><style>${HEAD_CSS_STRING}</style></head>`,
       )
-      .replace('</body>', `<script>${customBodyJS}</script>${ga}</body>`);
+      .replace(/<\/body>/i, `<script>${customBodyJS}</script>${ga}</body>`);
   }
 
   return (
