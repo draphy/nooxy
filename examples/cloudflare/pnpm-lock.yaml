@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       nooxy:
-        specifier: ^1.7.0
-        version: 1.7.0
+        specifier: ^1.7.1
+        version: 1.7.1
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.19
@@ -815,8 +815,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nooxy@1.7.0:
-    resolution: {integrity: sha512-CKuwI1BaqrOC2ayRCWvAzTbJOlFEvexxRKth9EKLHvZ35nsaUMGHHOpfq0gIbpOsmn5Yh2H35SJBhhgcGgBPyw==}
+  nooxy@1.7.1:
+    resolution: {integrity: sha512-7v8YJIuLVyZJWRjOUjnr92Xn04WczPmNNmp98qTZGldB9fcAfGa6UWjOcd+4jd07pCs0jo1Nw6j4cLAKRnOJ6Q==}
     engines: {node: '>=18.17.0'}
     hasBin: true
 
@@ -1628,7 +1628,7 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nooxy@1.7.0: {}
+  nooxy@1.7.1: {}
 
   ohash@2.0.11: {}
 
