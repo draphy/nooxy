@@ -113,7 +113,7 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
 
     // For 304 Not Modified responses, return with null body
     if (response.status === 304) {
-      const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname);
+      const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
       return new Response(null, {
         status: response.status,
         statusText: response.statusText,
@@ -128,7 +128,7 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
     const modifiedData = modifyResponseData(data, targetUrl.pathname, siteConfig, urlOrgState.protocol);
 
     // Modify response headers
-    const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname);
+    const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
 
     return new Response(modifiedData, {
       status: response.status,

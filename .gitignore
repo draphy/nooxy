@@ -168,3 +168,4 @@ dist
 .wrangler/
 .vscode
 .git
+test-results/
