@@ -36,6 +36,15 @@ Notion Sites charges [$10/month per domain](https://www.notion.com/help/notion-s
 
 **Nooxy gives you everything. For free.**
 
+### See It Live
+
+These sites run on Nooxy right now:
+
+- **[os.draphy.org](https://os.draphy.org)** — Life documented as a file system
+- **[draphy.org](https://draphy.org)** — Personal site
+
+View source, check the SEO tags, test the interactivity. It works.
+
 ---
 
 ## Why Nooxy?
