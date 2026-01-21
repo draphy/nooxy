@@ -1,8 +1,6 @@
-function buildCustomHeader(customHeader) {
-  return `
-  <div class="nooxyBadge_4f7c2b1a-demo-topbar">
-  ${customHeader ?? ''}
-  <a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0" target="_blank" rel="noopener noreferrer">
+function buildCustomHeader(customHeader, showBadge) {
+  const badge = showBadge
+    ? `<a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0" target="_blank" rel="noopener noreferrer">
     <!-- Subtle shine effect -->
     <span class="nooxyBadge_4f7c2b1a-badge-shine"></span>
     <!-- Sparkle icon -->
@@ -18,7 +16,12 @@ function buildCustomHeader(customHeader) {
       />
     </svg>
     Made with Nooxy
-  </a>
+  </a>`
+    : '';
+  return `
+  <div class="nooxyBadge_4f7c2b1a-demo-topbar">
+  ${customHeader ?? ''}
+  ${badge}
 </div>
   `;
 }
@@ -28,7 +31,7 @@ const cusHeaderInterval = setInterval(() => {
   const injectedHeader = document.querySelector('.nooxyBadge_4f7c2b1a-demo-topbar');
 
   if (header && !injectedHeader) {
-    header.insertAdjacentHTML('afterbegin', buildCustomHeader(customHeader));
+    header.insertAdjacentHTML('afterbegin', buildCustomHeader(customHeader, showBadge));
     clearInterval(cusHeaderInterval);
   }
 }, 300);

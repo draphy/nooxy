@@ -274,6 +274,16 @@ pageMetadata: {
 }
 ```
 
+### Nooxy Configuration
+
+```javascript
+nooxy: {
+  // Show "Made with Nooxy" badge in header
+  // Default: true - set to false to hide the badge
+  showBadge: true,
+}
+```
+
 ### Optional Features
 
 | Field | Description |
