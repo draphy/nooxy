@@ -13,7 +13,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 
-[Quick Start](#-quick-start) · [Why Nooxy](#-why-nooxy) · [Features](#-features) · [Configuration](#-configuration-reference) · [Examples](./examples)
+[Quick Start](#quick-start) · [Why Nooxy](#why-nooxy) · [Features](#features) · [Configuration](#configuration-reference) · [Examples](./examples)
 
 </div>
 
