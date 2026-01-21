@@ -35,13 +35,15 @@ export function modifyResponseData(
     customBodyJS,
     googleFont,
     seo,
+    nooxy,
   } = siteConfig;
   let data = responseData;
   const notionDomainUrl = new URL(ensureHttpsUrl(notionDomain)).origin;
 
   const targetDomain = seo?.canonicalDomain || domain;
   const safeCustomHeader = escapeForJS(customHeader || '');
-  const customJSCode = `var notionDomain='${notionDomainUrl}',slugToPage=${JSON.stringify(slugToPage)},pageToSlug=${JSON.stringify(pageToSlug)},customHeader='${safeCustomHeader}';${HEAD_JS_STRING}`;
+  const showBadge = nooxy?.showBadge !== false; // Default: true
+  const customJSCode = `var notionDomain='${notionDomainUrl}',slugToPage=${JSON.stringify(slugToPage)},pageToSlug=${JSON.stringify(pageToSlug)},customHeader='${safeCustomHeader}',showBadge=${showBadge};${HEAD_JS_STRING}`;
   const googleFontInject = googleFont
     ? `<link href='https://fonts.googleapis.com/css?family=${googleFont.replace(
         / /g,

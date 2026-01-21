@@ -41,9 +41,19 @@ export interface NooxySiteConfigFull {
   // SEO configuration
   seo?: NooxySeoConfig
 
+  // Nooxy-specific configuration
+  nooxy?: NooxyConfig
+
   // Calculated fields
   pageToSlug: Record<string, string>
   slugs: Array<string>
+}
+
+// Nooxy-specific configuration
+export interface NooxyConfig {
+  // Show "Made with Nooxy" badge in header
+  // Default: true
+  showBadge?: boolean
 }
 
 // SEO configuration
