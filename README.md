@@ -279,7 +279,9 @@ pageMetadata: {
 ```javascript
 nooxy: {
   // Show "Made with Nooxy" badge in header
-  // Default: true - set to false to hide the badge
+  // Default: true
+  // Set to false to hide it... 💔 it'll break my heart, but hey,
+  // if it helps your site look cleaner, I'll survive... probably 😢
   showBadge: true,
 }
 ```
