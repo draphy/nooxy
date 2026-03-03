@@ -120,6 +120,8 @@ Nooxy rewrites Notion's HTML to give search engines exactly what they need:
 
 ## Quick Start
 
+> For detailed deployment guides, see [examples](./examples).
+
 ### 1. Install
 
 ```bash
@@ -179,11 +181,20 @@ npx nooxy generate
 
 ### 5. Deploy
 
-**Cloudflare Workers** (recommended):
+Nooxy works with Cloudflare Workers (recommended) and Node.js.
+
+**For complete step-by-step deployment guides, see:**
+
+| Platform | Guide |
+|----------|-------|
+| **Cloudflare Workers** | [Full Deployment Guide](./examples/cloudflare/README.md) |
+| **Node.js** | Coming soon |
+
+**Quick reference for Cloudflare Workers:**
 
 ```typescript
 import { initializeNooxy } from 'nooxy';
-import { SITE_CONFIG } from './nooxy/config';
+import { SITE_CONFIG } from '../nooxy/config';
 
 const proxy = initializeNooxy(SITE_CONFIG);
 
@@ -194,7 +205,7 @@ export default {
 };
 ```
 
-**Node.js**:
+**Quick reference for Node.js:**
 
 ```typescript
 import { initializeNooxy } from 'nooxy';
