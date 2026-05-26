@@ -129,6 +129,10 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
 
     // Modify response headers
     const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
+    modifiedResponseHeaders.delete('content-encoding');
+    modifiedResponseHeaders.delete('content-length');
+    modifiedResponseHeaders.delete('content-digest');
+    modifiedResponseHeaders.delete('etag');
 
     return new Response(modifiedData, {
       status: response.status,

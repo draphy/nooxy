@@ -4,6 +4,8 @@ import { HEAD_JS_STRING } from './custom/generated/_head-js-string';
 import { HEAD_CSS_STRING } from './custom/generated/_head-css-string';
 import { rewriteMetaTags } from './meta-rewriter';
 
+const ASSET_PATCH_VERSION = '1';
+
 function escapeForJS(str: string): string {
   return str
     .replace(/\\/g, '\\\\') // Escape backslashes first
@@ -14,6 +16,20 @@ function escapeForJS(str: string): string {
     .replace(/\t/g, '\\t') // Escape tabs
     .replace(/</g, '\\x3c') // Escape < to prevent </script> injection
     .replace(/>/g, '\\x3e'); // Escape > for safety
+}
+
+function removePublicDomainInterstitial(responseData: string): string {
+  try {
+    const payload = JSON.parse(responseData) as Record<string, unknown>;
+    if (!Object.prototype.hasOwnProperty.call(payload, 'requireInterstitial')) {
+      return responseData;
+    }
+
+    payload.requireInterstitial = undefined;
+    return JSON.stringify(payload);
+  } catch (_error) {
+    return responseData;
+  }
 }
 
 // Helper function to modify response data
@@ -84,12 +100,27 @@ export function modifyResponseData(
   //   // console.log('[DEBUG]', pathname, found);
   // }
 
+  if (pathname === '/api/v3/getPublicPageData' || pathname === '/api/v3/getPublicPageDataForDomain') {
+    data = removePublicDomainInterstitial(data);
+  }
+
   // IMPORTANT: This must happen BEFORE script injection to avoid replacing the notionDomain variable
   const escapedNotionDomain = notionDomain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const notionDomainPattern = new RegExp(`https?://${escapedNotionDomain}(?=[/?"'>#\\s]|$)`, 'gi');
 
-  if (/^\/_assets\/[^/]*\.js$/.test(pathname)) {
-    data = data.replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()'); // Exclude 'window.location.href=' but not 'window.location.href=='
+  if (/^\/_assets\/.+\.js$/.test(pathname)) {
+    data = data
+      .replace(/nooxy=\d+/g, `nooxy=${ASSET_PATCH_VERSION}`)
+      // Exclude assignments like window.location.href=, but keep reads and comparisons patched.
+      .replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()')
+      .replace(
+        /baseUrl:[^,;{}]+\.domainBaseUrl,publicDomainName:[^,;{}]+\.publicDomainName/g,
+        'baseUrl:new URL(window.nooxy.href()).origin,publicDomainName:void 0',
+      )
+      .replace(
+        /(\.src=)([a-zA-Z_$][\w$]*)(\),[a-zA-Z_$][\w$]*\[[a-zA-Z_$][\w$]*\]=\[)/g,
+        `$1$2+($2.indexOf("?")===-1?"?nooxy=${ASSET_PATCH_VERSION}":"&nooxy=${ASSET_PATCH_VERSION}")$3`,
+      );
   } else if (/<html/i.test(data) || /<!DOCTYPE/i.test(data)) {
     // Assume HTML (case-insensitive check for <html> and <!DOCTYPE>)
     // Apply meta tag rewriting first
@@ -99,6 +130,10 @@ export function modifyResponseData(
     data = data.replace(notionDomainPattern, `${protocol}//${targetDomain}`);
 
     data = data
+      .replace(/(<script\b[^>]*\bsrc=["'])(\/_assets\/[^"']+\.js)(["'][^>]*>)/gi, (_match, prefix, src, suffix) => {
+        const separator = src.includes('?') ? '&' : '?';
+        return `${prefix}${src}${separator}nooxy=${ASSET_PATCH_VERSION}${suffix}`;
+      })
       .replace(
         /<\/head>/i,
         `${googleFontInject}<script>${customHeadJS}</script><script>${customJSCode}</script><style>${customHeadCSS}</style><style>${HEAD_CSS_STRING}</style></head>`,
