@@ -111,6 +111,22 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
       return response;
     }
 
+    // Non-textual responses (PDFs, fonts, and other file attachments) must be
+    // streamed through untouched. Reading a binary body with response.text() does a
+    // lossy UTF-8 decode/re-encode round-trip that corrupts the bytes, so the browser
+    // receives a broken file and can't render it. Only HTML/CSS/JS/JSON/XML get
+    // rewritten below.
+    const contentType = response.headers.get('content-type') || '';
+    const isTextual = /text\/html|text\/css|text\/plain|javascript|application\/json|\bxml\b/i.test(contentType);
+    if (!isTextual) {
+      const passthroughHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: passthroughHeaders,
+      });
+    }
+
     // For 304 Not Modified responses, return with null body
     if (response.status === 304) {
       const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
