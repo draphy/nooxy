@@ -117,6 +117,13 @@ window.history.replaceState = new Proxy(window.history.replaceState, {
     }
     const match = /^https?:\/\/([^\\/]*)/.exec(url);
     const domain = match ? match[1] : '';
+    // file.notion.so and file.notion.com serve signed PDF and attachment downloads.
+    // They are real content, not telemetry, so they must not be dropped. The blanket
+    // notion.so rule below would otherwise leave react-pdf with an empty body. Keep
+    // this comment slash-free: the converter mis-parses a bare slash as a regex.
+    if (domain === 'file.notion.so' || domain === 'file.notion.com') {
+      return false;
+    }
     return (
       (domain.endsWith('notion.so') && !domain.endsWith('msgstore.www.notion.so')) ||
       domain.endsWith('splunkcloud.com') ||
