@@ -8,8 +8,21 @@ export function modifyRequestHeaders(headers: Headers): Headers {
 }
 
 // Helper function to modify response headers
-export function modifyResponseHeaders(headers: Headers, hostname: string, siteConfig?: NooxySiteConfigFull): Headers {
+export function modifyResponseHeaders(
+  headers: Headers,
+  hostname: string,
+  siteConfig?: NooxySiteConfigFull,
+  bodyModified?: boolean,
+): Headers {
   const newHeaders = new Headers(headers);
+
+  // Remove stale headers when response body has been modified
+  if (bodyModified) {
+    newHeaders.delete('content-encoding');
+    newHeaders.delete('content-length');
+    newHeaders.delete('content-digest');
+    newHeaders.delete('etag');
+  }
 
   // Handle cookies - rewrite Notion domain to custom domain
   const cookies = headers.get('set-cookie');

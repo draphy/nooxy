@@ -4,7 +4,9 @@ import { HEAD_JS_STRING } from './custom/generated/_head-js-string';
 import { HEAD_CSS_STRING } from './custom/generated/_head-css-string';
 import { rewriteMetaTags } from './meta-rewriter';
 
+// Bump when patching logic changes (regex patterns, HEAD_JS_STRING, HEAD_CSS_STRING)
 const ASSET_PATCH_VERSION = '1';
+const INTERSTITIAL_API_PATHS = new Set(['/api/v3/getPublicPageData', '/api/v3/getPublicPageDataForDomain']);
 
 function escapeForJS(str: string): string {
   return str
@@ -19,15 +21,20 @@ function escapeForJS(str: string): string {
 }
 
 function removePublicDomainInterstitial(responseData: string): string {
+  if (!responseData.includes('requireInterstitial')) {
+    return responseData;
+  }
   try {
     const payload = JSON.parse(responseData) as Record<string, unknown>;
-    if (!Object.prototype.hasOwnProperty.call(payload, 'requireInterstitial')) {
+    if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
       return responseData;
     }
-
+    if (!('requireInterstitial' in payload)) {
+      return responseData;
+    }
     payload.requireInterstitial = undefined;
     return JSON.stringify(payload);
-  } catch (_error) {
+  } catch {
     return responseData;
   }
 }
@@ -100,7 +107,7 @@ export function modifyResponseData(
   //   // console.log('[DEBUG]', pathname, found);
   // }
 
-  if (pathname === '/api/v3/getPublicPageData' || pathname === '/api/v3/getPublicPageDataForDomain') {
+  if (INTERSTITIAL_API_PATHS.has(pathname)) {
     data = removePublicDomainInterstitial(data);
   }
 
@@ -109,14 +116,17 @@ export function modifyResponseData(
   const notionDomainPattern = new RegExp(`https?://${escapedNotionDomain}(?=[/?"'>#\\s]|$)`, 'gi');
 
   if (/^\/_assets\/.+\.js$/.test(pathname)) {
+    // Patch Notion's JS bundles for proxy compatibility
     data = data
-      .replace(/nooxy=\d+/g, `nooxy=${ASSET_PATCH_VERSION}`)
+      // Update existing nooxy cache-bust params to current version
+      .replace(/([?&])nooxy=\d+/g, `$1nooxy=${ASSET_PATCH_VERSION}`)
       // Exclude assignments like window.location.href=, but keep reads and comparisons patched.
       .replace(/window\.location\.href(?=[^=]|={2,})/g, 'window.nooxy.href()')
-      .replace(
-        /baseUrl:[^,;{}]+\.domainBaseUrl,publicDomainName:[^,;{}]+\.publicDomainName/g,
-        'baseUrl:new URL(window.nooxy.href()).origin,publicDomainName:void 0',
-      )
+      // Patch Notion's domain config to use proxy origin instead of notion.so
+      .replace(/([{,]baseUrl):[a-zA-Z_$][\w$.]*\.domainBaseUrl\b/g, '$1:new URL(window.nooxy.href()).origin')
+      .replace(/([{,]publicDomainName):[a-zA-Z_$][\w$.]*\.publicDomainName\b/g, '$1:void 0')
+      // Patch webpack chunk loader to add cache-bust param to dynamic script URLs
+      // Matches: .src=url),chunks[id]=[ → .src=url+(url.indexOf("?")===-1?"?nooxy=1":"&nooxy=1"),chunks[id]=[
       .replace(
         /(\.src=)([a-zA-Z_$][\w$]*)(\),[a-zA-Z_$][\w$]*\[[a-zA-Z_$][\w$]*\]=\[)/g,
         `$1$2+($2.indexOf("?")===-1?"?nooxy=${ASSET_PATCH_VERSION}":"&nooxy=${ASSET_PATCH_VERSION}")$3`,
@@ -130,10 +140,16 @@ export function modifyResponseData(
     data = data.replace(notionDomainPattern, `${protocol}//${targetDomain}`);
 
     data = data
-      .replace(/(<script\b[^>]*\bsrc=["'])(\/_assets\/[^"']+\.js)(["'][^>]*>)/gi, (_match, prefix, src, suffix) => {
-        const separator = src.includes('?') ? '&' : '?';
-        return `${prefix}${src}${separator}nooxy=${ASSET_PATCH_VERSION}${suffix}`;
-      })
+      .replace(
+        /(<script\b[^>]*\bsrc=["'])(\/_assets\/[^"']*\.js[^"']*)(["'][^>]*>)/gi,
+        (_match, prefix, src, suffix) => {
+          if (src.includes('nooxy=')) {
+            return `${prefix}${src}${suffix}`;
+          }
+          const separator = src.includes('?') ? '&' : '?';
+          return `${prefix}${src}${separator}nooxy=${ASSET_PATCH_VERSION}${suffix}`;
+        },
+      )
       .replace(
         /<\/head>/i,
         `${googleFontInject}<script>${customHeadJS}</script><script>${customJSCode}</script><style>${customHeadCSS}</style><style>${HEAD_CSS_STRING}</style></head>`,
