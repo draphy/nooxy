@@ -65,14 +65,14 @@ function minifyCSS(code) {
     // Clean up
     .trim();
 
-  // Restore URLs
+  // Restore URLs (use callback to avoid $ special chars in replacement)
   urlStore.forEach(({ placeholder, url }) => {
-    minified = minified.replace(placeholder, url);
+    minified = minified.replace(placeholder, () => url);
   });
 
-  // Restore strings
+  // Restore strings (use callback to avoid $ special chars in replacement)
   stringStore.forEach(({ placeholder, string }) => {
-    minified = minified.replace(placeholder, string);
+    minified = minified.replace(placeholder, () => string);
   });
 
   return minified;
@@ -131,9 +131,9 @@ function minifyHTML(code) {
   // Remove quotes around simple attribute values (be careful with this)
   // .replace(/=(['"])([\w-]+)\1/g, '=$2') // Commented out for safety
 
-  // Restore all protected content
+  // Restore all protected content (use callback to avoid $ special chars)
   protectedContent.forEach(({ placeholder, content }) => {
-    minified = minified.replace(placeholder, content);
+    minified = minified.replace(placeholder, () => content);
   });
 
   return minified;
@@ -143,53 +143,111 @@ function minifyHTML(code) {
  * Advanced JavaScript minifier with better regex handling
  * @param {string} code - The JavaScript code to minify
  * @returns {string} - Minified JavaScript code
+ *
+ * Processing order is critical:
+ * 1. Extract strings (protect "https://" from being seen as comments)
+ * 2. Extract template literals (protect `${...}` expressions)
+ * 3. Extract regex patterns (BEFORE comment removal - regex like /test\// has //)
+ * 4. Remove comments (now safe - strings and regex are protected)
+ * 5. Minify whitespace
+ * 6. Restore in reverse order
+ *
+ * Key insight: regex extraction requires preceding context char (=, (, etc.)
+ * so comments like "// path/to/file" won't match (/ is not a context char).
  */
 function advancedMinifyJavaScript(code) {
-  // Store regex patterns temporarily to avoid breaking them
-  const regexPatterns = [];
-  let regexIndex = 0;
   let jsCode = code;
-  // Extract and store regex patterns
-  jsCode = jsCode.replace(/\/(?![*\/])(?:[^\/\\\n\r]|\\.)*(\/[gimuy]*)/g, (match) => {
-    const placeholder = `__REGEX_${regexIndex++}__`;
-    regexPatterns.push({ placeholder, pattern: match });
-    return placeholder;
-  });
 
-  // Extract and store string literals to protect them
+  // STEP 1: Extract and protect string literals FIRST
+  // This prevents "https://" inside strings from being treated as comments
   const strings = [];
   let stringIndex = 0;
 
-  // Handle single and double quoted strings
+  // Handle single and double quoted strings (including escaped quotes)
   jsCode = jsCode.replace(/(['"])((?:(?!\1)[^\\]|\\.)*)(\1)/g, (match) => {
     const placeholder = `__STRING_${stringIndex++}__`;
     strings.push({ placeholder, string: match });
     return placeholder;
   });
 
-  // Now minify the code
-  let minified = jsCode
+  // STEP 2: Extract and protect template literals
+  // Handle nested template literals by processing from innermost out
+  const templateLiterals = [];
+  let templateIndex = 0;
+
+  // Simple template literals without expressions
+  jsCode = jsCode.replace(/`(?:[^`\\]|\\.)*`/g, (match) => {
+    const placeholder = `__TEMPLATE_${templateIndex++}__`;
+    templateLiterals.push({ placeholder, template: match });
+    return placeholder;
+  });
+
+  // STEP 3: Extract regex patterns BEFORE comment removal
+  // This protects regex like /test\// where // at the end would be seen as comment
+  // The pattern requires a preceding context char (=, (, [, etc.) so comments
+  // like "// path/to/file" won't match (the first / is not preceded by context char,
+  // and the second / after "path" is preceded by "h", not a context char)
+  const regexPatterns = [];
+  let regexIndex = 0;
+
+  // Regex pattern explanation:
+  // - (^|...|keywords) - start of line OR preceding context char OR keywords
+  // - \s* - optional whitespace
+  // - \/ - opening delimiter
+  // - (?![*\/]) - not followed by * or / (would be comment)
+  // - (?:[^\/\\\n\r]|\\[\s\S])+ - regex body: non-special chars OR escaped anything
+  // - \/ - closing delimiter
+  // - [gimsuy]* - optional flags
+  // Note: keywords (return, throw, case) are included because regex can follow them
+  // and we need to extract before the / is mistaken for division operator
+  jsCode = jsCode.replace(
+    /(^|[(\[=!&|?:;{},]|\b(?:return|throw|case)\b)\s*(\/(?![*\/])(?:[^\/\\\n\r]|\\[\s\S])+\/[gimsuy]*)/gm,
+    (_match, prefix, regex) => {
+      const placeholder = `__REGEX_${regexIndex++}__`;
+      regexPatterns.push({ placeholder, pattern: regex });
+      return `${prefix} ${placeholder}`;
+    },
+  );
+
+  // STEP 4: Remove comments (now safe - strings and regex are protected)
+  jsCode = jsCode
     // Remove single-line comments
     .replace(/\/\/.*$/gm, '')
     // Remove multi-line comments
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    // Remove extra whitespace
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+
+  // STEP 5: Minify whitespace and syntax
+  let minified = jsCode
+    // Collapse all whitespace to single space
     .replace(/\s+/g, ' ')
-    // Remove spaces around operators and punctuation
+    // Remove spaces around punctuation
     .replace(/\s*([{}();,:\[\]])\s*/g, '$1')
     // Remove spaces around operators
-    .replace(/\s*([=!<>+\-*/%&|^])\s*/g, '$1')
+    .replace(/\s*([=!<>+\-*/%&|^?])\s*/g, '$1')
+    // Add space after keywords only when followed by identifier/literal (not punctuation)
+    .replace(/\b(return|throw|new|delete|typeof|void)\b(?=\w)/g, '$1 ')
+    // Add space before regex placeholder after return/throw
+    .replace(/\b(return|throw|case)\b(__REGEX_)/g, '$1 $2')
     // Clean up
     .trim();
 
-  // Restore strings
-  strings.forEach(({ placeholder, string }) => {
-    minified = minified.replace(placeholder, string);
-  });
+  // STEP 6: Restore in reverse order (LIFO)
+  // Use callback functions to avoid $ special chars in replacement strings
+  // ($ has special meaning in String.prototype.replace: $&, $`, $', $1, etc.)
 
   // Restore regex patterns
   regexPatterns.forEach(({ placeholder, pattern }) => {
-    minified = minified.replace(placeholder, pattern);
+    minified = minified.replace(placeholder, () => pattern);
+  });
+
+  // Restore template literals
+  templateLiterals.forEach(({ placeholder, template }) => {
+    minified = minified.replace(placeholder, () => template);
+  });
+
+  // Restore strings
+  strings.forEach(({ placeholder, string }) => {
+    minified = minified.replace(placeholder, () => string);
   });
 
   return minified;
