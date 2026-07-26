@@ -10,6 +10,9 @@ import {
 import { modifyRequestHeaders, modifyResponseData, modifyResponseHeaders } from './rewriters';
 import { NooxySiteConfig, NooxySiteConfigFull } from './types';
 
+// Content types that require proxy rewriting (HTML injection, URL rewriting, etc.)
+const TEXTUAL_CONTENT_TYPES = /text\/html|text\/css|javascript|application\/json|\bxml\b/i;
+
 export function initializeNooxy(
   options: NooxySiteConfig | { configKey?: string; config: NooxySiteConfig },
 ): (request: Request) => Promise<Response> {
@@ -112,6 +115,7 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
     }
 
     // For 304 Not Modified responses, return with null body
+    // Must check before binary passthrough since 304 responses have no body
     if (response.status === 304) {
       const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
       return new Response(null, {
@@ -121,14 +125,30 @@ async function reverseProxy(request: Request, siteConfig: NooxySiteConfigFull): 
       });
     }
 
+    // Non-textual responses (PDFs, fonts, and other file attachments) must be
+    // streamed through untouched. Reading a binary body with response.text() does a
+    // lossy UTF-8 decode/re-encode round-trip that corrupts the bytes, so the browser
+    // receives a broken file and can't render it. Only HTML/CSS/JS/JSON/XML get
+    // rewritten below. Missing content-type defaults to binary passthrough (fail-safe).
+    const contentType = response.headers.get('content-type') || '';
+    const isTextual = TEXTUAL_CONTENT_TYPES.test(contentType);
+    if (!isTextual) {
+      const passthroughHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: passthroughHeaders,
+      });
+    }
+
     // Get response data
     const data = await response.text();
 
     // Modify response data
     const modifiedData = modifyResponseData(data, targetUrl.pathname, siteConfig, urlOrgState.protocol);
 
-    // Modify response headers
-    const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig);
+    // Modify response headers (bodyModified=true removes stale content headers)
+    const modifiedResponseHeaders = modifyResponseHeaders(response.headers, hostname, siteConfig, true);
 
     return new Response(modifiedData, {
       status: response.status,
