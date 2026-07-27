@@ -1,29 +1,8 @@
 function buildCustomHeader(customHeader, showBadge) {
   const badge = showBadge
-    ? `<a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0" target="_blank" rel="noopener noreferrer">
-    <!-- Subtle shine effect -->
-    <span class="nooxyBadge_4f7c2b1a-badge-shine"></span>
-    <!-- Sparkle icon -->
-    <svg
-      class="nooxyBadge_4f7c2b1a-badge-icon"
-      width="10"
-      height="10"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path
-        d="M12 0l3.09 6.26L22 9.27l-6.91 3.01L12 24l-3.09-11.72L2 9.27l6.91-3.01L12 0z"
-      />
-    </svg>
-    Made with Nooxy
-  </a>`
+    ? `<a class="nooxyBadge_4f7c2b1a-badge-link" style="cursor: pointer;" href="https://github.com/draphy/nooxy" tabindex="0" target="_blank" rel="noopener noreferrer"><span class="nooxyBadge_4f7c2b1a-badge-shine"></span><svg class="nooxyBadge_4f7c2b1a-badge-icon" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l3.09 6.26L22 9.27l-6.91 3.01L12 24l-3.09-11.72L2 9.27l6.91-3.01L12 0z"/></svg>Made with Nooxy</a>`
     : '';
-  return `
-  <div class="nooxyBadge_4f7c2b1a-demo-topbar">
-  ${customHeader ?? ''}
-  ${badge}
-</div>
-  `;
+  return `<div class="nooxyBadge_4f7c2b1a-demo-topbar">${customHeader ?? ''}${badge}</div>`;
 }
 
 const cusHeaderInterval = setInterval(() => {
@@ -106,7 +85,7 @@ window.history.replaceState = new Proxy(window.history.replaceState, {
   // entirely in the browser so no network request is made and nothing reaches
   // the proxy. These responses were already discarded, so the page is unaffected.
   const pathOf = function (url) {
-    const noScheme = url.replace(/^https?:\/\/[^\\/]*/, '');
+    const noScheme = url.replace(/^https?:\/\/[^/]*/, '');
     return noScheme.split('?')[0].split('#')[0];
   };
 
@@ -115,20 +94,19 @@ window.history.replaceState = new Proxy(window.history.replaceState, {
     if (pathOf(url) === '/api/v3/ping') {
       return true;
     }
-    const match = /^https?:\/\/([^\\/]*)/.exec(url);
-    const domain = match ? match[1] : '';
+    const match = /^https?:\/\/(?:[^@/:]*:[^@/]*@)?([^/:]*)/i.exec(url);
+    const domain = match ? match[1].toLowerCase() : '';
     // file.notion.so and file.notion.com serve signed PDF and attachment downloads.
-    // They are real content, not telemetry, so they must not be dropped. The blanket
-    // notion.so rule below would otherwise leave react-pdf with an empty body. Keep
-    // this comment slash-free: the converter mis-parses a bare slash as a regex.
+    // They are real content, not telemetry, so they must not be dropped.
     if (domain === 'file.notion.so' || domain === 'file.notion.com') {
       return false;
     }
-    return (
-      (domain.endsWith('notion.so') && !domain.endsWith('msgstore.www.notion.so')) ||
-      domain.endsWith('splunkcloud.com') ||
-      domain.endsWith('statsigapi.net')
-    );
+    // Check exact domain or subdomain (e.g., notion.so or api.notion.so, not notnotion.so)
+    const isNotion = domain === 'notion.so' || domain.endsWith('.notion.so');
+    const isMsgStore = domain === 'msgstore.www.notion.so';
+    const isSplunk = domain === 'splunkcloud.com' || domain.endsWith('.splunkcloud.com');
+    const isStatsig = domain === 'statsigapi.net' || domain.endsWith('.statsigapi.net');
+    return (isNotion && !isMsgStore) || isSplunk || isStatsig;
   };
 
   const urlOf = function (input) {
