@@ -152,7 +152,7 @@ export const SITE_CONFIG = {
 | `siteName` | Your website name | `John's Portfolio` |
 | `slugToPage` | URL → Page ID mapping | `'/': 'abc123...'` |
 
-These are the required fields to get started. Nooxy has many more options for SEO, custom fonts, analytics, 404 pages, and more — see [Configuration Reference](https://github.com/draphy/nooxy#configuration-reference) in the main README.
+These are the required fields to get started. Nooxy has many more options for SEO, custom fonts, analytics, 404 pages, and more — see [Configuration Reference](../../README.md#configuration-reference) in the main README.
 
 ---
 
@@ -168,7 +168,7 @@ This processes your configuration and prepares everything for deployment.
 
 > **Important:** Run this command every time you change anything in the `nooxy/` folder. Your changes won't take effect until you regenerate.
 
-For more CLI options (custom paths, debugging), see [CLI Commands](https://github.com/draphy/nooxy#cli-commands) in the main README.
+For more CLI options (custom paths, debugging), see [CLI Commands](../../README.md#cli-commands) in the main README.
 
 ---
 
@@ -387,8 +387,8 @@ All customization files are in the `nooxy/` folder:
 > **Important:** Run `npx nooxy generate` every time you change anything in the `nooxy/` folder. Your changes won't appear until you regenerate and redeploy.
 
 **For detailed documentation on each file, examples, and all configuration options, see the main README:**
-- [Project Files](https://github.com/draphy/nooxy#project-files) — how each file works, what to put in them
-- [Configuration Reference](https://github.com/draphy/nooxy#configuration-reference) — all config options (SEO, social media, fonts, 404 pages, redirects, etc.)
+- [Project Files](../../README.md#project-files) — how each file works, what to put in them
+- [Configuration Reference](../../README.md#configuration-reference) — all config options (SEO, social media, fonts, 404 pages, redirects, etc.)
 
 ---
 
@@ -457,7 +457,7 @@ Run `npm install nooxy` in your project folder.
 | Log in to Cloudflare | `npx wrangler login` |
 | Deploy | `npm run deploy` |
 
-For more CLI options, see [CLI Commands](https://github.com/draphy/nooxy#cli-commands) in the main README.
+For more CLI options, see [CLI Commands](../../README.md#cli-commands) in the main README.
 
 ---
 
@@ -491,6 +491,6 @@ my-nooxy-site/
 
 **You did it!** Your Notion site is now live on your own domain.
 
-[← Back to main README](https://github.com/draphy/nooxy)
+[← Back to main README](../../README.md)
 
 </div>
