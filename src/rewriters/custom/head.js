@@ -5,15 +5,37 @@ function buildCustomHeader(customHeader, showBadge) {
   return `<div class="nooxyBadge_4f7c2b1a-demo-topbar">${customHeader ?? ''}${badge}</div>`;
 }
 
-const cusHeaderInterval = setInterval(() => {
-  const header = document.querySelector('header');
-  const injectedHeader = document.querySelector('.nooxyBadge_4f7c2b1a-demo-topbar');
+// Inject badge inside header and re-inject if React removes it
+// Uses MutationObserver + requestAnimationFrame to batch checks (max 60/sec, not per-mutation)
+(function initBadge() {
+  const BADGE_CLASS = 'nooxyBadge_4f7c2b1a-demo-topbar';
+  let pending = false;
 
-  if (header && !injectedHeader) {
-    header.insertAdjacentHTML('afterbegin', buildCustomHeader(customHeader, showBadge));
-    clearInterval(cusHeaderInterval);
-  }
-}, 300);
+  const injectBadge = () => {
+    const header = document.querySelector('header');
+    if (header && !header.querySelector(`.${BADGE_CLASS}`)) {
+      header.insertAdjacentHTML('afterbegin', buildCustomHeader(customHeader, showBadge));
+    }
+  };
+
+  const scheduleInject = () => {
+    if (pending) {
+      return;
+    }
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      injectBadge();
+    });
+  };
+
+  const init = () => {
+    injectBadge();
+    new MutationObserver(scheduleInject).observe(document.body, { childList: true, subtree: true });
+  };
+
+  document.body ? init() : document.addEventListener('DOMContentLoaded', init);
+})();
 
 function extractSlug(url) {
   if (url.startsWith('/')) {
