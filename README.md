@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> · <a href="#why-nooxy">Why Nooxy</a> · <a href="#features">Features</a> · <a href="#configuration-reference">Configuration</a> · <a href="./examples">Examples</a>
+  <a href="#quick-start">Quick Start</a> · <a href="#why-nooxy">Why Nooxy</a> · <a href="#features">Features</a> · <a href="#configuration-reference">Configuration</a> · <a href="#project-files">Customization</a> · <a href="#full-deployment-guides">Deployment Guides</a>
 </p>
 
 ---
@@ -124,9 +124,18 @@ Nooxy rewrites Notion's HTML to give search engines exactly what they need:
 
 ## Quick Start
 
-> For detailed deployment guides, see [examples](./examples).
+> **New to this?** If you don't have a project set up yet, start with our [Full Deployment Guides](#full-deployment-guides) instead — they walk you through everything from creating an account to deploying your live site. Currently available for **[Cloudflare Workers](./examples/cloudflare/README.md)** (recommended, ~15 min).
+
+This section shows how to add Nooxy to an **existing** JavaScript/TypeScript project. It works with Cloudflare Workers, Node.js, Deno, Bun, or any runtime that supports the Fetch API.
+
+For all configuration options and customization, see:
+- [Configuration Reference](#configuration-reference) — all config options
+- [Project Files](#project-files) — CSS, JavaScript, and HTML injection
+- [CLI Commands](#cli-commands) — available commands
 
 ### 1. Install
+
+In your project folder (where `package.json` is), run:
 
 ```bash
 npm install nooxy
@@ -138,38 +147,74 @@ npm install nooxy
 npx nooxy init
 ```
 
-This creates a `nooxy/` folder with all configuration files.
+This creates a `nooxy/` folder with all configuration files:
 
-### 3. Configure
+```
+nooxy/
+├── config.js       # Main configuration
+├── head.css        # Custom CSS (optional)
+├── head.js         # JavaScript for <head> (optional)
+├── body.js         # JavaScript for <body> (optional)
+└── header.html     # Custom header HTML (optional)
+```
+
+### 3. Get Your Notion Page IDs
+
+Every Notion page has a unique **Page ID** — a 32-character code that identifies it.
+
+**How to find it:**
+
+1. Open your Notion page in a browser
+2. Look at the URL:
+   ```
+   https://www.notion.so/My-Page-Title-abc123def456789012345678901234ab
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                        This is your Page ID (32 characters)
+   ```
+3. Copy just the ID part (after the last hyphen)
+
+**Examples:**
+
+| URL | Page ID |
+|-----|---------|
+| `notion.so/Home-abc123def456789012345678901234ab` | `abc123def456789012345678901234ab` |
+| `myworkspace.notion.site/Blog-11122233344455566677788899900aaa` | `11122233344455566677788899900aaa` |
+
+**Important:** Make sure your Notion pages are **published to web** (Share → Publish → Publish to web).
+
+### 4. Configure
 
 Edit `nooxy/config.js`:
 
 ```javascript
 export const SITE_CONFIG = {
-  // Your custom domain
+  // Your custom domain (without https://)
   domain: 'yourdomain.com',
 
-  // Your Notion workspace (e.g., yourname.notion.site)
-  notionDomain: 'yourname.notion.site',
+  // Your Notion workspace domain
+  // Find it in your Notion URL: https://YOUR-WORKSPACE.notion.site/...
+  notionDomain: 'yourworkspace.notion.site',
 
-  // Site name for SEO
+  // Site name (appears in browser tabs and search results)
   siteName: 'Your Site Name',
 
-  // Map URLs to Notion page IDs
+  // Map URL paths to Notion page IDs
+  // Left side: URL on your site
+  // Right side: Notion page ID (32 characters)
   slugToPage: {
     '/': 'YOUR_HOME_PAGE_ID',           // yourdomain.com/
     '/about': 'YOUR_ABOUT_PAGE_ID',     // yourdomain.com/about
     '/blog': 'YOUR_BLOG_PAGE_ID',       // yourdomain.com/blog
   },
 
-  // SEO configuration (optional but recommended)
+  // SEO settings (optional but recommended)
   seo: {
-    indexing: true,                      // Enable search engine indexing
+    indexing: true,                     // Allow search engines to index
     keywords: 'your, keywords, here',
     defaultAuthor: 'Your Name',
   },
 
-  // Required: Generated files (don't modify)
+  // These are auto-generated — don't modify
   customHeadCSS: HEAD_CSS_STRING,
   customHeadJS: HEAD_JS_STRING,
   customBodyJS: BODY_JS_STRING,
@@ -177,24 +222,23 @@ export const SITE_CONFIG = {
 };
 ```
 
-### 4. Generate
+### 5. Generate
+
+After editing your config, process the files:
 
 ```bash
 npx nooxy generate
 ```
 
-### 5. Deploy
+**Run this command every time you change anything in the `nooxy/` folder.**
 
-Nooxy works with Cloudflare Workers (recommended) and Node.js.
+### 6. Integrate with Your Runtime
 
-**For complete step-by-step deployment guides, see:**
+Nooxy exports a single function that handles all requests. Add this to your server/worker entry point:
 
-| Platform | Guide |
-|----------|-------|
-| **Cloudflare Workers** | [Full Deployment Guide](./examples/cloudflare/README.md) |
-| **Node.js** | Coming soon |
+> **Need step-by-step deployment instructions?** See the [Full Deployment Guides](#full-deployment-guides) for complete setup including file creation, testing, and deployment.
 
-**Quick reference for Cloudflare Workers:**
+**Cloudflare Workers:**
 
 ```typescript
 import { initializeNooxy } from 'nooxy';
@@ -209,7 +253,7 @@ export default {
 };
 ```
 
-**Quick reference for Node.js:**
+**Node.js (18.17+):**
 
 ```typescript
 import { initializeNooxy } from 'nooxy';
@@ -219,72 +263,161 @@ import http from 'node:http';
 const proxy = initializeNooxy(SITE_CONFIG);
 
 http.createServer(async (req, res) => {
-  const request = new Request(`http://${req.headers.host}${req.url}`);
+  const url = `http://${req.headers.host}${req.url}`;
+  const request = new Request(url, {
+    method: req.method,
+    headers: req.headers,
+  });
+  
   const response = await proxy(request);
+  
   res.statusCode = response.status;
-  response.headers.forEach((v, k) => res.setHeader(k, v));
+  response.headers.forEach((value, key) => res.setHeader(key, value));
   res.end(Buffer.from(await response.arrayBuffer()));
-}).listen(8787);
+}).listen(8787, () => {
+  console.log('Server running at http://localhost:8787');
+});
 ```
+
+**Any Fetch-compatible runtime:**
+
+```typescript
+import { initializeNooxy } from 'nooxy';
+import { SITE_CONFIG } from './nooxy/config';
+
+const proxy = initializeNooxy(SITE_CONFIG);
+
+// proxy(request: Request) => Promise<Response>
+// Pass any standard Request, get a standard Response
+```
+
+---
+
+## Full Deployment Guides
+
+The Quick Start above covers Nooxy setup. If you need a complete walkthrough — from creating an account to deploying your live site — use these platform-specific guides:
+
+| Platform | Guide | Description |
+|----------|-------|-------------|
+| **Cloudflare Workers** | [Full Guide →](./examples/cloudflare/README.md) | Recommended. Free tier, global edge network, ~15 min setup |
+| **Node.js** | Coming soon | For self-hosted servers |
+
+These guides include all the Nooxy setup steps plus platform-specific deployment instructions.
 
 ---
 
 ## Configuration Reference
 
-### Required
+All configuration is in `nooxy/config.js`. After any changes, run `npx nooxy generate` to apply them.
 
-| Field | Description |
-|-------|-------------|
-| `domain` | Your custom domain (e.g., `example.com`) |
-| `notionDomain` | Your Notion workspace domain (e.g., `yourname.notion.site`) |
-| `siteName` | Site name for SEO and social sharing |
-| `slugToPage` | URL path to Notion page ID mapping |
-| `customHeadCSS` | Generated CSS string |
-| `customHeadJS` | Generated head JavaScript string |
-| `customBodyJS` | Generated body JavaScript string |
-| `customHeader` | Generated header HTML string |
+### Required Fields
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `domain` | Your custom domain (without https://) | `example.com` |
+| `notionDomain` | Your Notion workspace domain (prevents serving unintended Notion content) | `myname.notion.site` |
+| `siteName` | Site name for browser tabs, SEO, and `og:site_name` | `My Portfolio` |
+| `slugToPage` | URL path → Notion page ID mapping (32-char hex IDs) | `{ '/': 'abc123...' }` |
+
+### Generated Fields
+
+These fields are auto-populated by `npx nooxy generate` from files in the `nooxy/` folder. Don't edit them directly — edit the source files instead:
+
+| Field | Source File | Purpose |
+|-------|-------------|---------|
+| `customHeadCSS` | `nooxy/head.css` | CSS injected into `<head>` |
+| `customHeadJS` | `nooxy/head.js` | JavaScript injected into `<head>` (runs before page loads) |
+| `customBodyJS` | `nooxy/body.js` | JavaScript injected before `</body>` (runs after page loads) |
+| `customHeader` | `nooxy/header.html` | HTML injected into page header (navigation, banners, etc.) |
 
 ### SEO Configuration
 
 ```javascript
 seo: {
   // Enable search engine indexing (default: true)
+  // When true: removes Notion's noindex tags, adds canonical URLs, 
+  // injects robots meta, generates sitemap.xml and robots.txt
   indexing: true,
 
   // Canonical domain (if different from domain)
-  // Useful when nooxy runs on subdomain but SEO points to main domain
+  // Use when Nooxy runs on a subdomain but SEO should point to main domain
+  // Affects: canonical URLs, og:url, twitter:url, sitemap.xml
   canonicalDomain: 'example.com',
 
   // Path mapping for canonical URLs
-  // Maps nooxy paths to canonical domain paths
+  // Maps paths from your Nooxy domain to the canonical domain
   canonicalPathMap: {
-    '/': '/home',           // os.example.com/ → example.com/home
+    '/': '/home',              // subdomain.example.com/ → example.com/home
     '/docs': '/documentation',
   },
 
-  // Meta keywords for SEO
-  keywords: 'notion, website, custom domain',
+  // Meta keywords (adds <meta name="keywords">)
+  keywords: 'notion, website, portfolio',
 
-  // Default author for pages
+  // Default author for all pages (adds <meta name="author"> and article:author)
+  // Can be overridden per-page in pageMetadata
   defaultAuthor: 'Your Name',
 
-  // Replace "Notion" branding with custom text
+  // Replace "Notion" branding with your brand in all meta tags
+  // Affects: <title>, og:title, og:description, og:site_name, twitter:title, etc.
+  // Default: uses siteName
   brandReplacement: 'Your Brand',
 
-  // AI crawler attribution (ChatGPT, Claude, etc.)
+  // AI crawler attribution (ChatGPT, Claude, Perplexity)
+  // Adds: <meta name="ai:source_url"> and <meta name="ai:source_attribution">
+  // Helps AI systems properly credit your content
   aiAttribution: 'Your Name - yourdomain.com',
 }
 ```
 
 ### Page-Specific Metadata
 
+Override meta tags for specific pages. Key is the Notion page ID (32 characters):
+
 ```javascript
 pageMetadata: {
-  'NOTION_PAGE_ID': {
-    title: 'Custom Page Title',
-    description: 'Custom meta description for this page',
-    image: 'https://yourdomain.com/og-image.jpg',
-    author: 'Page Author Name',
+  'abc123def456789012345678901234ab': {
+    title: 'Custom Page Title',           // <title>, og:title, twitter:title
+    description: 'Custom meta description', // meta description, og:description, twitter:description
+    image: 'https://yourdomain.com/og.jpg', // og:image, twitter:image
+    author: 'Page Author Name',            // article:author (overrides seo.defaultAuthor)
+  },
+}
+```
+
+### Social & Branding
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `twitterHandle` | Twitter/X handle for `twitter:site` meta tag (include @) | `@yourusername` |
+| `siteIcon` | Custom favicon URL (.ico format). If not set, uses Notion's default | `https://example.com/favicon.ico` |
+
+### Typography & Analytics
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `googleFont` | Google Font family name from [fonts.google.com](https://fonts.google.com). Applied site-wide | `Inter`, `Roboto` |
+| `googleTagID` | Google Analytics 4 measurement ID. Injects GA4 tracking script | `G-XXXXXXXXXX` |
+
+### 404 Page
+
+Custom Notion page to display for 404 errors:
+
+```javascript
+fof: {
+  page: 'NOTION_404_PAGE_ID',  // Your custom 404 page (32-char ID)
+  slug: '/404',                // URL path (default: '/404')
+}
+```
+
+### Subdomain Redirects
+
+Redirect subdomains to your main domain. Common use: redirect www to non-www:
+
+```javascript
+subDomains: {
+  www: {
+    redirect: 'https://example.com',  // www.example.com → example.com (301 redirect)
   },
 }
 ```
@@ -293,67 +426,106 @@ pageMetadata: {
 
 ```javascript
 nooxy: {
-  // Show "Made with Nooxy" badge in header
-  // Default: true
-  // Set to false to hide it... 💔 it'll break my heart, but hey,
-  // if it helps your site look cleaner, I'll survive... probably 😢
+  // Show "Made with Nooxy" badge in header (default: true)
   showBadge: true,
 }
 ```
 
-### Optional Features
+### Auto-Generated Features
 
-| Field | Description |
-|-------|-------------|
-| `twitterHandle` | Twitter/X handle for social cards (e.g., `@yourusername`) |
-| `siteIcon` | Custom favicon URL |
-| `googleFont` | Google Font family name (e.g., `Inter`) |
-| `googleTagID` | Google Analytics measurement ID |
-| `fof` | Custom 404 page configuration |
-| `subDomains` | Subdomain redirect rules |
+These features work automatically — no configuration needed:
+
+| Feature | URL | Description |
+|---------|-----|-------------|
+| **Sitemap** | `/sitemap.xml` | Auto-generated XML sitemap with all pages from `slugToPage` |
+| **Robots.txt** | `/robots.txt` | Points crawlers to your sitemap |
+| **Clean URLs** | — | Rewrites Notion URLs (`/Page-abc123`) to your slugs (`/about`) |
+| **JSON-LD Schema** | — | Injects structured data for rich search results |
+| **Canonical URLs** | — | Adds `<link rel="canonical">` to every page |
+| **Open Graph** | — | Rewrites `og:url`, `og:site_name` for proper social sharing |
+| **Twitter Cards** | — | Rewrites `twitter:url`, `twitter:site` for Twitter/X previews |
 
 ---
 
 ## CLI Commands
 
-### Initialize Project
-
 ```bash
+# Create nooxy/ folder with config files
 npx nooxy init
-```
 
-Creates the `nooxy/` directory with all configuration templates.
-
-### Generate Files
-
-```bash
-# Standard generation (with minification)
+# Process config changes (run after editing any nooxy/ file)
 npx nooxy generate
 
-# Custom path
+# Generate with custom path
 npx nooxy generate --path=./my-project
 
-# Without minification (for debugging)
+# Generate without minification (for debugging)
 npx nooxy generate --no-minify
 ```
 
-Converts your custom files to optimized, importable strings.
-
 ---
 
-## Customization
+## Project Files
 
-### Custom CSS (`nooxy/head.css`)
+When you run `npx nooxy init`, it creates a `nooxy/` folder with these files:
+
+```
+nooxy/
+├── config.js       # Main configuration (domain, pages, SEO settings)
+├── head.css        # Custom CSS injected into <head>
+├── head.js         # JavaScript injected into <head> (runs before page loads)
+├── body.js         # JavaScript injected before </body> (runs after page loads)
+└── header.html     # Custom HTML injected into page header
+```
+
+### How Files Are Processed
+
+1. You edit the source files (`head.css`, `body.js`, etc.)
+2. Run `npx nooxy generate` — this reads the files, minifies them, and writes them to `nooxy/generated/` (which `config.js` imports)
+3. When your site runs, Nooxy injects these into every page response
+
+```
+                     npx nooxy generate
++---------------+                          +---------------+
+|   head.css    |  ----------------------> |               |
+|   head.js     |    (minifies & embeds)   |   config.js   |
+|   body.js     |  ----------------------> |               |
+|  header.html  |                          |               |
++---------------+                          +---------------+
+```
+
+> **Important:** Run `npx nooxy generate` every time you change anything in the `nooxy/` folder. Your changes won't take effect until you regenerate and redeploy.
+
+### File Reference
+
+#### `config.js` — Main Configuration
+
+Contains all your site settings. See [Configuration Reference](#configuration-reference) for all options.
+
+```javascript
+export const SITE_CONFIG = {
+  domain: 'yourdomain.com',
+  notionDomain: 'yourworkspace.notion.site',
+  siteName: 'Your Site Name',
+  slugToPage: {
+    '/': 'YOUR_PAGE_ID',
+  },
+  // ... other options
+};
+```
+
+#### `head.css` — Custom Styles
+
+CSS injected into `<head>`. Use this to override Notion's default styles:
 
 ```css
-/* Hide Notion's default elements */
+/* Hide Notion's top bar */
 .notion-topbar { display: none !important; }
 
-/* Custom styling */
+/* Custom page styling */
 .notion-page-content {
   max-width: 900px;
   margin: 0 auto;
-  font-family: 'Inter', sans-serif;
 }
 
 /* Dark mode support */
@@ -362,26 +534,72 @@ Converts your custom files to optimized, importable strings.
 }
 ```
 
-### Custom JavaScript (`nooxy/body.js`)
+**Tips:**
+- Use `!important` to override Notion's styles
+- Notion uses `.dark` class for dark mode
+- Inspect your Notion page to find class names to target
+
+#### `head.js` — Early JavaScript
+
+JavaScript injected into `<head>`. Runs **before** the page content loads. Use for:
+- Analytics that need to run early
+- Setting up global variables
+- Theme detection before render
 
 ```javascript
-// Analytics, interactions, custom functionality
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('Site loaded with Nooxy!');
+// Example: Set theme before page renders to prevent flash
+const theme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', theme);
+```
 
-  // Track page views, add smooth scrolling, etc.
+#### `body.js` — Main JavaScript
+
+JavaScript injected before `</body>`. Runs **after** the page content loads. Use for:
+- DOM manipulation
+- Event listeners
+- Interactive features
+
+```javascript
+document.addEventListener('DOMContentLoaded', () => {
+  // Add smooth scrolling
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelector(anchor.getAttribute('href')).scrollIntoView({
+        behavior: 'smooth'
+      });
+    });
+  });
 });
 ```
 
-### Custom Header (`nooxy/header.html`)
+#### `header.html` — Custom Header
+
+HTML injected at the top of the page body. Use for navigation bars, announcements, or banners:
 
 ```html
-<nav class="site-nav">
+<nav style="padding: 1rem; background: #f5f5f5; display: flex; gap: 1rem;">
   <a href="/">Home</a>
   <a href="/about">About</a>
+  <a href="/blog">Blog</a>
   <a href="/contact">Contact</a>
 </nav>
 ```
+
+### After Making Changes
+
+Every time you edit any file in `nooxy/`:
+
+```bash
+# 1. Regenerate the config
+npx nooxy generate
+
+# 2. Redeploy (platform-specific)
+npm run deploy          # Cloudflare Workers
+# or restart your server  # Node.js
+```
+
+Content changes in Notion appear automatically — no regeneration needed. Only changes to `nooxy/` files require regeneration.
 
 ---
 
@@ -424,7 +642,6 @@ User Response ← Modified HTML
 | **Notion interactivity** | Lost (static) | Preserved |
 | **Database filtering** | No | Yes |
 | **Real-time updates** | No | Yes |
-| **Hosting type** | Subdomain | Your domain |
 
 ### vs Fruition
 
@@ -434,44 +651,17 @@ User Response ← Modified HTML
 | **SEO features** | Basic | Comprehensive |
 | **TypeScript** | No | Yes |
 | **CLI tools** | No | Yes |
-| **Multi-tenant** | No | Yes |
-
----
-
-## Architecture
-
-```
-src/
-├── index.ts              # Main export
-├── proxy.ts              # Core reverse proxy
-├── types.ts              # TypeScript definitions
-├── helpers/              # Utilities
-├── handlers/             # Request handlers (sitemap, robots, etc.)
-├── rewriters/            # HTML rewriting (meta, data, headers)
-└── cli/                  # CLI commands (init, generate)
-```
 
 ---
 
 ## Troubleshooting
 
-### Pages return 404
-
-- Verify Notion page IDs are correct (32-character hex)
-- Ensure pages are published publicly in Notion
-- Check `notionDomain` matches your Notion workspace
-
-### CSS not applied
-
-- Run `npx nooxy generate` after changes
-- Use `!important` to override Notion styles
-- Check browser console for errors
-
-### SEO tags not appearing
-
-- Ensure `seo.indexing` is `true` (default)
-- Check that you're viewing the source (not rendered DOM)
-- Verify your deployment is using the latest build
+| Problem | Solution |
+|---------|----------|
+| **Pages return 404** | Verify page IDs are 32 characters, pages are published in Notion, `notionDomain` matches your workspace |
+| **CSS not applied** | Run `npx nooxy generate` after changes, use `!important` to override Notion styles |
+| **SEO tags not appearing** | Ensure `seo.indexing` is `true`, view page source (not rendered DOM), redeploy |
+| **"Cannot find module 'nooxy'"** | Run `npm install nooxy` |
 
 ---
 
