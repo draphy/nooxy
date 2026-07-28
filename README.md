@@ -46,8 +46,11 @@ These sites run on Nooxy right now:
 
 - **[os.draphy.org](https://os.draphy.org)** — Life documented as a file system
 - **[draphy.org](https://draphy.org)** — Personal site
+- **[em-ucd.com](https://em-ucd.com)** — Portfolio
 
 View source, check the SEO tags, test the interactivity. It works.
+
+**Using Nooxy?** [Share your site in Discussions](https://github.com/draphy/nooxy/discussions) — we'd love to see it!
 
 ---
 
