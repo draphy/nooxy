@@ -606,11 +606,15 @@ Content changes in Notion appear automatically — no regeneration needed. Only 
 ## How It Works
 
 ```
-User Request → Nooxy → Notion
-     ↓
-  Rewrite URLs, inject SEO, add customizations
-     ↓
-User Response ← Modified HTML
+User Request --> Nooxy --> Notion
+                  |          |
+                  |    <-----+  (fetches HTML)
+                  |
+                  v
+            [Rewrite & Inject]
+                  |
+                  v
+User Response <-- Modified HTML
 ```
 
 1. **Intercepts** requests to your custom domain
