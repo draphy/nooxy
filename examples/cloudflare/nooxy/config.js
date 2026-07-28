@@ -154,6 +154,7 @@ export const SITE_CONFIG = {
   //   // Default: true
   //   // Set to false to hide it... 💔 it'll break my heart, but hey,
   //   // if it helps your site look cleaner, I'll survive... probably 😢
+  //   // (But if you're feeling generous: https://github.com/sponsors/draphy 💜)
   //   showBadge: true,
   // },
 

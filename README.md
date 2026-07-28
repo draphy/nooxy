@@ -430,9 +430,13 @@ subDomains: {
 ```javascript
 nooxy: {
   // Show "Made with Nooxy" badge in header (default: true)
+  // Set to false to hide it... 💔 it'll break my heart, but hey,
+  // if it helps your site look cleaner, I'll survive... probably 😢
   showBadge: true,
 }
 ```
+
+> 💜 If Nooxy helped you, a [GitHub sponsorship](https://github.com/sponsors/draphy) would mean the world!
 
 ### Auto-Generated Features
 
