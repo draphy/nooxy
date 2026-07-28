@@ -1,21 +1,25 @@
 # Nooxy
 
-<div align="center">
+<p align="center">
+  <img src="assets/logo.png" alt="Nooxy Logo" width="140" />
+</p>
 
-<img src="assets/logo.png" alt="Nooxy Logo" width="140" />
+<h3 align="center"><b>Turn Notion into a website. Free. Forever.</b></h3>
 
-### **Turn Notion into a website. Free. Forever.**
+<p align="center">
+  <b>The only Notion reverse proxy with full SEO, zero dependencies, and complete customization.</b>
+</p>
 
-**The only Notion reverse proxy with full SEO, zero dependencies, and complete customization.**
+<p align="center">
+  <a href="https://www.npmjs.com/package/nooxy"><img src="https://img.shields.io/npm/v/nooxy?style=flat-square" alt="npm version"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="https://workers.cloudflare.com/"><img src="https://img.shields.io/badge/Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white" alt="Cloudflare Workers"></a>
+</p>
 
-[![npm version](https://img.shields.io/npm/v/nooxy?style=flat-square)](https://www.npmjs.com/package/nooxy)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
-
-[Quick Start](#quick-start) · [Why Nooxy](#why-nooxy) · [Features](#features) · [Configuration](#configuration-reference) · [Examples](./examples)
-
-</div>
+<p align="center">
+  <a href="#quick-start">Quick Start</a> · <a href="#why-nooxy">Why Nooxy</a> · <a href="#features">Features</a> · <a href="#configuration-reference">Configuration</a> · <a href="./examples">Examples</a>
+</p>
 
 ---
 
