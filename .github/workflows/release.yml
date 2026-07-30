@@ -8,72 +8,95 @@ on:
 
   workflow_dispatch:
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  id-token: write # Required for npm OIDC trusted publishing
+# No workflow-level `permissions` on purpose. Both jobs below declare their own,
+# so there is no question of whether a job-level block replaces or is capped by
+# a workflow-level one — the docs do not say, and this is the one pipeline where
+# guessing wrong means a half-finished publish.
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  # A half-finished publish is worse than a queued one, so a run already in
+  # progress is allowed to finish. This was cancel-in-progress: true, which
+  # could kill semantic-release between tagging and publishing.
+  cancel-in-progress: false
 
 jobs:
+  # The release used to build the package and publish it without running lint,
+  # type-check or a single test. Calling package-ci.yml means a publish faces
+  # exactly the gate a PR faces, and the two cannot drift apart.
+  verify:
+    name: Verify
+    uses: ./.github/workflows/package-ci.yml
+    permissions:
+      contents: read
+
   release:
     name: Release
+    needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Scoped to this job so the verify job above runs read-only.
+    permissions:
+      contents: write # push tags and create the GitHub release
+      issues: write # comment on released issues
+      pull-requests: write # comment on released pull requests
+      id-token: write # npm OIDC trusted publishing
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # Important for semantic-release to analyze commits/tags
+          fetch-depth: 0 # semantic-release needs full history to analyse commits and tags
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
+          # NOT .node-version (22). npm's trusted publishing requires npm
+          # >= 11.5.1 and Node >= 22.14.0, and Node 22 still ships npm 10.x —
+          # publishing would fail at the last step. Node 24 bundles a
+          # compatible npm, which is what npm's own docs recommend.
+          # https://docs.npmjs.com/trusted-publishers
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          # Writes the .npmrc that `npm publish` reads. Deliberately no
+          # NODE_AUTH_TOKEN: trusted publishing authenticates over OIDC, and
+          # npm's docs say no authToken should be present for the publish.
+          registry-url: https://registry.npmjs.org
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: '10.13.1'
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
+      # Fail here, before anything is tagged, rather than after semantic-release
+      # has already pushed a tag and a GitHub release that no npm version backs.
+      - name: npm is new enough for trusted publishing
         run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          NPM_VERSION="$(npm --version)"
+          echo "npm $NPM_VERSION on node $(node --version)"
+          if [ "$(printf '11.5.1\n%s\n' "$NPM_VERSION" | sort -V | head -1)" != "11.5.1" ]; then
+            echo "::error::npm $NPM_VERSION is older than the 11.5.1 required for trusted publishing"
+            exit 1
+          fi
 
       - name: Build package
         run: pnpm build
 
+      # .releaserc.json sets npmPublish: false, so this decides the next
+      # version, writes it into package.json, tags, and creates the GitHub
+      # release — but does not publish. The step below publishes, which is what
+      # allows --provenance to be passed.
       - name: Semantic Release
-        id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm semantic-release
 
-      - name: Publish to npm with OIDC
-        if: steps.semantic.outcome == 'success'
+      # No `if: steps.semantic.outcome == 'success'` here: without
+      # continue-on-error a failed semantic-release already fails the job, so
+      # that condition only ever read as true and implied a fallback that did
+      # not exist. The version check is the real decision.
+      # --provenance is redundant under trusted publishing, where npm generates
+      # and publishes the attestation automatically. It is kept explicit so the
+      # intent survives if this ever moves back to token authentication, where
+      # the flag IS required.
+      - name: Publish to npm with provenance
         run: |
-          # Check if package.json version was updated (not 0.0.0-development)
           VERSION=$(node -p "require('./package.json').version")
-          if [ "$VERSION" != "0.0.0-development" ]; then
-            echo "Publishing version $VERSION to npm with OIDC provenance..."
-            npm publish --provenance --access public
-          else
-            echo "No new version to publish"
+          if [ "$VERSION" = "0.0.0-development" ]; then
+            echo "semantic-release found nothing to release."
+            exit 0
           fi
+          echo "Publishing $VERSION with OIDC provenance..."
+          npm publish --provenance --access public

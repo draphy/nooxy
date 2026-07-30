@@ -1,13 +1,25 @@
 name: Verify PRs
 
 on:
+  # `edited` matters here — this workflow checks the title, so it has to rerun
+  # when the title changes.
   pull_request:
     types: [opened, synchronize, reopened, edited]
+
+# Declared per job rather than at the workflow level, so the labeller's
+# pull-requests: write is not sitting under a narrower workflow-level block.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   pr-title-check:
     name: PR Title Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Reads the title from the event payload; never touches the API.
+    permissions: {}
     steps:
       - name: Check PR Title
         shell: bash
@@ -48,9 +60,21 @@ jobs:
   label-merge-conflicts:
     name: Has Conflicts
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write # to add the label and comment
     steps:
       - name: Check for Merge Conflicts
-        uses: prince-chrismc/label-merge-conflicts-action@v3
+        # Pinned to a commit rather than a tag: a mutable tag on a third-party
+        # action is a supply-chain hole, since whoever controls the repository
+        # can repoint v3 at new code that runs with this token.
+        # v3.0.4 — bump the comment and the SHA together.
+        uses: prince-chrismc/label-merge-conflicts-action@21e6705eaa6aab66e4e486279389c8e3e4c465b7 # v3.0.4
+        # A PR from a fork gets a read-only token, so labelling cannot work
+        # there. That should not show up as a failed check on a contributor's
+        # first PR.
+        continue-on-error: true
         with:
           conflict_label_name: "conflicts"
           github_token: ${{ secrets.GITHUB_TOKEN }}

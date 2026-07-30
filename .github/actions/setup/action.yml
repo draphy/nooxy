@@ -1,0 +1,52 @@
+name: Setup
+description: Install Node, pnpm and the project's dependencies
+
+# Every job needs the same four steps. Repeating them per job is how the two
+# caches drifted apart (one on actions/cache@v3, one on @v4) and how the pnpm
+# version ended up hardcoded in six places.
+
+inputs:
+  node-version:
+    description: >
+      Node version to install. Leave empty to use the version in .node-version,
+      which is the right choice everywhere except the test matrix and the
+      release job.
+    required: false
+    default: ''
+  registry-url:
+    description: >
+      npm registry to write into .npmrc. Only the release job needs this; it is
+      what `npm publish` reads.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    # Must come before setup-node: `cache: pnpm` shells out to pnpm to resolve
+    # the store path, so the binary has to exist first. setup-node's own docs
+    # say the package manager "should be pre-installed".
+    #
+    # No `version` input — action-setup reads the `packageManager` field from
+    # package.json, keeping the pnpm version in exactly one place.
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+
+    # Exactly one of the two version inputs is ever non-empty.
+    #
+    # setup-node resolves with `if (version) return version; if (versionFileInput) ...`,
+    # so an empty string falls through to the file. Selecting the file by
+    # expression rather than by a second `if:`-guarded step also avoids its
+    # "Both node-version and node-version-file are specified" warning, which
+    # would otherwise annotate every matrix job.
+    - name: Install Node
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+        node-version-file: ${{ inputs.node-version == '' && '.node-version' || '' }}
+        registry-url: ${{ inputs.registry-url }}
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

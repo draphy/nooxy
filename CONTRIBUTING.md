@@ -44,6 +44,10 @@ git remote add upstream https://github.com/draphy/nooxy.git
 
 ### 4. Set Up the Development Environment
 
+Needs **Node 22+** (pinned in `.node-version`) and **pnpm** (`corepack enable`).
+Windows, macOS and Linux all work. Chrome is optional — the browser tests skip
+without it.
+
 ```bash
 # Install dependencies
 pnpm install
@@ -95,22 +99,11 @@ feat: [DRO-123] Add multi-instance config support
 
 ### 7. Pull Request Process
 
-0. Before pushing, run the full local check to ensure CI will pass:
-
-   ```bash
-   pnpm commit:check
-   ```
-
-1. Push your changes to your fork
+1. Push your changes to your fork — the pre-push hook runs the same checks CI will
+   (see [Running the checks locally](#running-the-checks-locally))
 2. Create a pull request against the main repository
-3. Use this format for the PR title:
-   ```
-   <type>: [DRO-<issue-number>] <Title starting with capital letter>
-   ```
-   Example:
-   ```
-   feat: [DRO-123] Add multi-instance config support
-   ```
+3. Give the PR the same title format as the commit, capitalised after the bracket —
+   `verify-pr.yml` rejects anything else
 4. Provide a detailed description in the PR
 5. Link the PR to the relevant issue
 6. Ensure all status checks pass
@@ -118,39 +111,11 @@ feat: [DRO-123] Add multi-instance config support
 
 Pull requests require approval from at least one reviewer before they can be merged.
 
-### 8. Code Quality Tools
-
-Before submitting your PR, ensure your code passes all checks by running:
-
-```bash
-# Format and lint with Biome
-pnpm biome:format
-pnpm biome:lint
-
-# Run type checking
-pnpm type:check
-
-# Run all checks and build (recommended before commit)
-pnpm commit:check
-```
-
 ## Development Guidelines
 
-### Code Style
-
-We use [Biome](https://biomejs.dev/) for linting and formatting. Our code style is enforced by the configuration in the repository.
-
-### Testing
-
-- Write tests for new features and bug fixes
-- Maintain or improve test coverage
-- Run tests locally before submitting a PR
-
-### Documentation
-
-- Update documentation to reflect any changes
-- Use clear and concise language
-- Follow the existing documentation style
+Formatting and linting are [Biome](https://biomejs.dev/), configured in the repo —
+`pnpm biome:fix` applies it. Write tests for new behaviour and update the docs when
+behaviour changes.
 
 ## Running Examples
 
@@ -169,6 +134,47 @@ After editing any files under `nooxy/` (head.js, body.js, head.css, header.html)
 ```bash
 npx nooxy generate [--path=/custom/path]
 ```
+
+## Running the checks locally
+
+The git hooks in `.githooks/` are wired up automatically by `pnpm install` (via the
+`prepare` script, which sets `core.hooksPath`). No hook manager is installed.
+
+| Command | What it runs | When |
+| --- | --- | --- |
+| `pnpm commit:check` | lint, types, build, tests | what `pre-push` runs |
+| `pnpm test` | the suite only | while iterating |
+| `pnpm test:mutation` | breaks the source deliberately and checks a test notices | before a release |
+| `pnpm check:generated` | builds, then fails if the build changed a committed file | what CI checks |
+| `pnpm test:coverage` | the suite with line/branch coverage | when adding a module |
+
+Coverage runs against `dist/`, because the tests exercise the built bundle on purpose.
+Ignore the CLI's figure — `cli.test.mjs` runs it as a child process, which the
+instrumenter cannot see.
+
+`pre-commit` is lint + types only, so it stays fast. Both hooks inspect the
+**working tree** rather than the index, so stash unrelated work-in-progress if it
+blocks an otherwise clean commit. Use `--no-verify` to skip either once.
+
+Biome handles JS, TS, JSON and CSS. It does **not** process Markdown, so `.md`
+files are not auto-formatted and `pnpm biome:check` will not flag them — match the
+surrounding style by hand.
+
+### Generated files
+
+`src/rewriters/custom/generated/*` is built from `head.js` and `head.css`. If you
+edit either, run `pnpm build` and commit the regenerated output — CI rejects a PR
+whose generated files do not match their own source.
+
+## Branch protection (maintainers)
+
+`.github/ruleset-required-checks.json` is **not applied automatically.** It is a
+record of the intended ruleset, and has to be imported by hand:
+
+**Settings → Rules → Rulesets → New ruleset → Import a ruleset.**
+
+Checks are required **by name**, so a renamed job — or one gaining a matrix — must be
+updated here in the same commit, or PRs wait on a check that never reports.
 
 ## Getting Help
 

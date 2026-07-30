@@ -1,0 +1,33 @@
+#!/bin/sh
+# The full local gate: everything CI will check except the mutation suite,
+# which is slow enough to leave to CI. Run `pnpm release:check` for that too.
+#
+# This is lint + types + a full build + the whole test suite, so expect tens of
+# seconds. That is the point on a shared branch, but it is heavy for pushing a
+# work-in-progress branch to back it up — use --no-verify for those.
+#
+# Skip once with:  git push --no-verify
+set -e
+
+echo "pre-push: running commit:check"
+pnpm commit:check
+
+# commit:check builds, and the build regenerates the committed files under
+# src/rewriters/custom/generated/ from head.js, head.css and header.html.
+#
+# If it changed any of them, the commits about to be pushed carry generated
+# output that does not match its own source. Without this check the hook would
+# report success, quietly leave the rebuilt files unstaged, and let CI reject
+# the push afterwards — the wrong end to find out.
+GENERATED_DIR="src/rewriters/custom/generated"
+
+if ! git diff --quiet -- "$GENERATED_DIR"; then
+  echo
+  echo "pre-push: the build regenerated files that are committed:"
+  git diff --name-only -- "$GENERATED_DIR" | sed 's/^/  /'
+  echo
+  echo "Their source changed without a rebuild. Run:"
+  echo "  pnpm build && git add $GENERATED_DIR"
+  echo "then amend or add a commit. CI checks the same thing (pnpm check:generated)."
+  exit 1
+fi

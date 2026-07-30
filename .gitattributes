@@ -1,0 +1,16 @@
+# Check every text file out with LF, on every platform.
+#
+# This is not just tidiness. biome.json sets `lineEnding: "lf"`, so a CRLF
+# working copy makes `pnpm biome:check` report every file as misformatted — a
+# Windows contributor could not get past the pre-commit hook. scripts/mutate.mjs
+# also matches multi-line source snippets containing \n, which CRLF would break.
+* text=auto eol=lf
+
+# Shell scripts must be LF regardless: `#!/bin/sh\r` fails with
+# "bad interpreter", which would silently disable the hooks on Windows.
+.githooks/* text eol=lf
+*.sh text eol=lf
+
+# Captured verbatim from a live page. Normalising it would change the bytes the
+# rewriter tests assert against.
+test/fixtures/*.html -text

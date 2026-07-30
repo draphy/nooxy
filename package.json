@@ -36,7 +36,7 @@
     "email": "david@draphy.org"
   },
   "engines": {
-    "node": ">=18.17.0"
+    "node": ">=22.0.0"
   },
   "license": "MIT",
   "publishConfig": {
@@ -63,17 +63,25 @@
     }
   },
   "scripts": {
+    "pretest": "node scripts/check-node.mjs",
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:watch": "node --test --watch \"test/*.test.mjs\"",
+    "test:coverage": "node --test --experimental-test-coverage \"test/*.test.mjs\"",
+    "test:mutation": "node scripts/mutate.mjs",
     "prebuild": "node converter.js && pnpm biome:fix",
     "build": "pnpm run prebuild && tsup src/index.ts --format esm --dts-resolve --clean --sourcemap --out-dir dist && pnpm run build:cli",
-    "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli && cp -r src/cli/templates dist/cli/",
+    "build:cli": "tsup src/cli/index.ts --format esm --clean --out-dir dist/cli && node -e \"require('fs').cpSync('src/cli/templates','dist/cli/templates',{recursive:true})\"",
     "biome:lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "biome:format": "biome format .",
     "format:fix": "biome format --write .",
     "biome:check": "biome check .",
     "biome:fix": "biome check --write .",
-    "type:check": "tsc  --noEmit",
-    "commit:check": "pnpm biome:check && pnpm type:check && pnpm build",
+    "type:check": "tsc --noEmit",
+    "check:generated": "pnpm build && git diff --exit-code -- src",
+    "commit:check": "pnpm biome:check && pnpm type:check && pnpm build && pnpm test",
+    "release:check": "pnpm commit:check && pnpm test:mutation",
+    "prepare": "node -e \"try{require('node:child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\"",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {

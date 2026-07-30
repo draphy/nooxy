@@ -1,0 +1,19 @@
+#!/bin/sh
+# Fast gate, run on every commit. Anything slower than a couple of seconds
+# belongs in pre-push, not here.
+#
+# Wired up by the "prepare" script in package.json, which points
+# core.hooksPath at this directory. No hook-manager dependency.
+#
+# NOTE: these check the working tree, not what is staged. That means unrelated
+# unstaged breakage will block an otherwise clean commit, and a staged fix is not
+# in itself what gets verified. Checking only the index would need a temporary
+# worktree, which costs more than it saves for a repo this size — so the tradeoff
+# is deliberate rather than overlooked.
+#
+# Skip once with:  git commit --no-verify
+set -e
+
+echo "pre-commit: lint, format and types"
+pnpm biome:check
+pnpm type:check

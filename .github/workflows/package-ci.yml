@@ -1,120 +1,154 @@
 name: Package Validity
 
 on:
-
+  # `edited` is deliberately absent: it fires when the PR *description* is
+  # changed, which used to rerun the whole suite for a typo fix. verify-pr.yml
+  # still listens for it, because that one checks the title.
   pull_request:
-    types: [opened, synchronize, reopened, edited]
-    branches: ["v1", "latest-release", "beta"]
+    types: [opened, synchronize, reopened]
 
+  # Post-merge verification on the default branch. latest-release and beta are
+  # deliberately absent: a push to either triggers release.yml, which calls this
+  # workflow itself, so listing them here would run every job twice.
+  push:
+    branches: [v1]
+
+  # Lets release.yml gate a publish on exactly these checks rather than
+  # maintaining a second, drifting copy of them.
+  workflow_call:
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Superseded pushes to a PR are worth cancelling. A release run is not.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint-format:
     name: Lint & Format
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: "10.13.1"
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - name: Check code formatting and linting
         run: pnpm biome:check
 
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: "10.13.1"
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - name: Type check
         run: pnpm type:check
 
   build:
     name: Build Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: "10.13.1"
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
+      # `pnpm check:generated` builds and then fails if the build changed
+      # anything under src. The build regenerates
+      # src/rewriters/custom/generated/* from head.js, head.css and
+      # header.html, and those files are committed — so without this a
+      # contributor could edit head.js, not rebuild, and have CI silently
+      # regenerate it in the runner and pass, merging a commit whose generated
+      # output does not match its own source.
+      #
+      # It assumes a clean tree, which is true after checkout but not on a
+      # working copy, so it is not part of the local commit:check.
+      - name: Build, and check the generated files are up to date
         run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+          if pnpm check:generated; then
+            exit 0
+          fi
 
-      - uses: actions/cache@v3
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          # Name the files, because two different mistakes land here: a source
+          # edit that was never rebuilt (generated/* is stale), and unformatted
+          # code that prebuild's `biome:fix` rewrote. The advice is the same
+          # either way, but the diff says which one it was.
+          echo "::error::A fresh build changed files that are committed. Run 'pnpm build' locally and commit the result."
+          git --no-pager diff --stat -- src
+          for changed in $(git diff --name-only -- src); do
+            echo "::error file=$changed::This file differs from a fresh build. Rebuild and commit it."
+          done
+          exit 1
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  test:
+    # One version, deliberately: the one in .node-version, which is 22.
+    #
+    # This was a 22-and-24 matrix. It was dropped because it did not buy what it
+    # looked like it bought:
+    #   - No code here branches on a Node version, and every version-sensitive API
+    #     it uses (getSetCookie, AbortSignal.timeout, duplex) exists in both.
+    #   - `engines` is >=22.0.0 and .node-version is 22, so one job on 22 tests the
+    #     declared floor exactly. The matrix tested 24 as well, which exercised no
+    #     different code path.
+    #   - Testing what .node-version pins means a contributor's local `pnpm test`
+    #     and CI run the same runtime, which is the difference that actually
+    #     catches things.
+    # The remaining risk is a fetch/undici behaviour change in a newer Node major,
+    # since this proxy leans on Headers and Request semantics. Worth a scheduled
+    # run against current Node if that ever bites; not worth doubling every PR.
+    #
+    # NOTE: this reports as "Tests". The required status checks in
+    # .github/ruleset-required-checks.json must match this name exactly, or a PR
+    # waits forever on a check that never reports.
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      # No node-version input: the setup action falls back to .node-version.
+      - uses: ./.github/actions/setup
 
+      # The suite exercises the built bundle, and the harness refuses to run
+      # against a dist older than src rather than reporting a false pass.
       - name: Build packages
         run: pnpm build
+
+      # test/head-js-browser.test.mjs skips when no browser is present, and a
+      # skipped suite still reports green. If the runner image ever stops
+      # shipping Chrome, this fails loudly instead of quietly testing less.
+      - name: Chrome is available for the browser tests
+        run: |
+          node --input-type=module -e "
+            const { chromePath } = await import('./test/helpers/browser.mjs');
+            if (!chromePath) {
+              console.log('::error::No Chrome on this runner — the browser tests would skip silently');
+              process.exit(1);
+            }
+            console.log('Using Chrome at ' + chromePath);
+          "
+
+      - name: Run tests
+        run: pnpm test
+
+  mutation:
+    name: Mutation Tests
+    runs-on: ubuntu-latest
+    # Every mutation in scripts/mutate.mjs, each one a full build plus the full
+    # suite. Deliberately no count or runtime estimate here — the previous ones
+    # said "17 mutations, roughly 2 minutes" and both had silently gone stale.
+    # The ceiling is generous so a hung run is killed rather than burning the
+    # 6 hour default.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      # Deliberately breaks the source and checks a test goes red for each
+      # break. Passing tests only prove the code runs; this proves they would
+      # notice if it stopped being correct. Fails if any mutation survives, or
+      # if one has gone stale because the code it targets moved.
+      - name: Run mutation tests
+        run: pnpm test:mutation
