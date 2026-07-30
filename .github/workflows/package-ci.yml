@@ -134,14 +134,38 @@ jobs:
         run: pnpm test
 
   mutation:
-    name: Mutation Tests
+    # Sharded, because each mutation is a full build plus the full suite and
+    # they used to run one after another. Unsharded this job took 27 minutes,
+    # which is too slow to sit in front of every merge.
+    #
+    # Note this is not the Node-version matrix that used to be on `test`. That
+    # one ran identical work twice for no extra coverage. This splits one job's
+    # work: the same mutations, the same total runner minutes, a twelfth of the
+    # wall clock. mutate.mjs strides by shard count rather than slicing, so no
+    # shard ends up holding every mutation from the same file.
+    #
+    # Twelve rather than more: beyond this the largest shard stops shrinking,
+    # and past sixteen the matrix plus the other jobs would exceed the twenty
+    # concurrent job cap and start queueing, which costs more than it saves.
+    #
+    # These shards are deliberately NOT the required status check. The
+    # mutation-complete job below is, because its name does not carry the shard
+    # count — see the comment there.
+    #
+    # Deliberately no runtime estimate in this comment. The previous ones said
+    # "17 mutations, roughly 2 minutes" and both had silently gone stale.
+    name: Mutation shard ${{ matrix.shard }}/12
     runs-on: ubuntu-latest
-    # Every mutation in scripts/mutate.mjs, each one a full build plus the full
-    # suite. Deliberately no count or runtime estimate here — the previous ones
-    # said "17 mutations, roughly 2 minutes" and both had silently gone stale.
-    # The ceiling is generous so a hung run is killed rather than burning the
-    # 6 hour default.
-    timeout-minutes: 30
+    # Well clear of the per-shard runtime, so a slow runner does not fail a
+    # green build, while still killing a hung run rather than letting it burn
+    # the six hour default.
+    timeout-minutes: 10
+    strategy:
+      # One failing shard says a mutation survived. The others are still worth
+      # knowing about, so let them finish rather than reporting one at a time.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
@@ -151,4 +175,37 @@ jobs:
       # notice if it stopped being correct. Fails if any mutation survives, or
       # if one has gone stale because the code it targets moved.
       - name: Run mutation tests
-        run: pnpm test:mutation
+        run: pnpm test:mutation -- --shard=${{ matrix.shard }}/12
+
+  # The single check the ruleset requires, so that the shard count is not baked
+  # into a required status check name.
+  #
+  # Requiring the shards directly meant the count lived in four places: this job
+  # name, the --shard argument, .github/ruleset-required-checks.json, and the
+  # live ruleset. Changing twelve to anything else and forgetting the last one
+  # leaves every PR waiting on checks that no longer report. With this job the
+  # ruleset names one context that never changes.
+  #
+  # NOTE: this reports as "Mutation Tests". The required status checks in
+  # .github/ruleset-required-checks.json must match this name exactly, or a PR
+  # waits forever on a check that never reports.
+  mutation-complete:
+    name: Mutation Tests
+    runs-on: ubuntu-latest
+    needs: mutation
+    # Without this the job is skipped when a shard fails, and a skipped required
+    # check never reports, which reads as "still running" rather than "failed".
+    if: always()
+    timeout-minutes: 5
+    steps:
+      # `needs.mutation.result` is a single value for the whole matrix: success
+      # only when every shard succeeded. Anything else — failure, cancelled or
+      # skipped — is not a pass, so it is compared against success rather than
+      # checked for failure.
+      - name: Every mutation shard passed
+        run: |
+          if [ "${{ needs.mutation.result }}" != "success" ]; then
+            echo "::error::Mutation shards did not all pass (result: ${{ needs.mutation.result }})"
+            exit 1
+          fi
+          echo "Every mutation shard passed."

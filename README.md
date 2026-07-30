@@ -769,6 +769,17 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
+## Trademark
+
+**Nooxy** and the Nooxy badge are trademarks of David Raphi. The MIT license
+covers the source code, not the name.
+
+Forks and derivative works are welcome. Please give yours a different name, and
+do not present it in a way that suggests it is Nooxy or endorsed by the project.
+See [TRADEMARK.md](TRADEMARK.md) for what is and is not allowed.
+
+---
+
 ## Acknowledgments
 
 Inspired by [Fruition](https://github.com/stephenou/fruitionsite) and [NoteHost](https://github.com/velsa/notehost), rebuilt for the modern web with comprehensive SEO, TypeScript, and zero dependencies.

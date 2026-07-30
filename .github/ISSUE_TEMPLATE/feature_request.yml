@@ -1,0 +1,33 @@
+name: "💡 Feature request"
+description: Suggest a change or an addition
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do that nooxy makes hard?
+      description: Describe the situation, not the fix. There is often already a way.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried so far?
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched the [existing issues](https://github.com/draphy/nooxy/issues?q=is%3Aissue) and [discussions](https://github.com/draphy/nooxy/discussions)
+          required: true
+        - label: This can be built without a new runtime dependency, since nooxy ships with none
+          required: true
