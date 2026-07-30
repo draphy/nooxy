@@ -1,0 +1,71 @@
+name: "🐛 Bug report"
+description: Report something that does not work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Questions and setup help belong in [Discussions](https://github.com/draphy/nooxy/discussions).
+        Security problems belong in [private reporting](https://github.com/draphy/nooxy/security/advisories/new), not here.
+
+  - type: input
+    id: version
+    attributes:
+      label: Nooxy version
+      description: "`npx nooxy --version`"
+      placeholder: 1.9.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where is it running?
+      options:
+        - Cloudflare Workers
+        - Node
+        - Deno
+        - Bun
+        - Local development only
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: reproduction
+    attributes:
+      label: Link to a page where the problem is visible
+      description: Put n/a if your site is not public, and fill in the config below.
+      placeholder: https://example.com/about
+    validations:
+      required: true
+
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: What happens, and what did you expect instead?
+      description: Include the steps to get there. Paste error text rather than a screenshot.
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Your nooxy config
+      description: Just the part that matters. Strip any page IDs you would rather not share.
+      render: javascript
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Only if the problem shows in the page rather than the response.
+      placeholder: Firefox 141
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched the [existing issues](https://github.com/draphy/nooxy/issues?q=is%3Aissue), closed ones included
+          required: true
