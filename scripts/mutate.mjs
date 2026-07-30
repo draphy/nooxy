@@ -23,6 +23,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { excerpt } from './lib/excerpt.mjs';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
@@ -527,7 +529,7 @@ const baselineBuild = run(['build'], LOOP_BUILD_ENV);
 if (!baselineBuild.ok) {
   console.log('FAILED');
   console.error('\nThe build fails with no mutation applied, so nothing below would mean anything.\n');
-  console.error(baselineBuild.output.trim().split('\n').slice(-15).join('\n'));
+  console.error(excerpt(baselineBuild.output));
   process.exit(2);
 }
 
@@ -538,7 +540,7 @@ if (!baselineTest.ok) {
   console.error('\nThe suite fails with no mutation applied. Every mutation below would be');
   console.error('reported as caught, and this run would claim a perfect score while proving');
   console.error('nothing. Fix the failing tests first.\n');
-  console.error(baselineTest.output.trim().split('\n').slice(-15).join('\n'));
+  console.error(excerpt(baselineTest.output));
   process.exit(2);
 }
 
@@ -594,7 +596,7 @@ if (!rebuilt.ok) {
   // Silently ignoring this used to leave generated/* and dist derived from the
   // last mutant with a zero exit code.
   console.error('\n!! The final rebuild failed, so generated files and dist may still hold mutated output.');
-  console.error(rebuilt.output?.split('\n').slice(-15).join('\n') ?? '');
+  console.error(excerpt(rebuilt.output));
   process.exit(2);
 }
 
