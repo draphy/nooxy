@@ -29,12 +29,12 @@ You built something great in Notion. Now you want to share it with the world on 
 
 **Your options today:**
 
-| Solution | Cost | SEO | Customization | Interactivity |
-|----------|------|-----|---------------|---------------|
-| **Notion Sites** | $10-22/mo | Limited, noindex issues | Minimal | Full |
-| **Super.so** | $12-28/mo | Good, but subdomain-only hurts rankings | Good | Lost (static) |
-| **Fruition** | Free | Poor, outdated | Limited | Full |
-| **Nooxy** | **Free** | **Full SEO suite** | **Complete** | **Full** |
+| Solution         | Cost      | SEO                                     | Customization | Interactivity |
+| ---------------- | --------- | --------------------------------------- | ------------- | ------------- |
+| **Notion Sites** | $10-22/mo | Limited, noindex issues                 | Minimal       | Full          |
+| **Super.so**     | $12-28/mo | Good, but subdomain-only hurts rankings | Good          | Lost (static) |
+| **Fruition**     | Free      | Poor, outdated                          | Limited       | Full          |
+| **Nooxy**        | **Free**  | **Full SEO suite**                      | **Complete**  | **Full**      |
 
 Notion Sites charges [$10/month per domain](https://www.notion.com/help/notion-sites-availability-and-pricing) with [limited SEO and customization](https://super.so/blog/notion-sites-pricing). Super.so costs [$12-28/month](https://super.so/pricing) and converts your pages to static HTML—you lose Notion's live databases, filtering, and real-time updates. Fruition is [no longer maintained](https://github.com/stephenou/fruitionsite) and lacks modern SEO features.
 
@@ -112,7 +112,7 @@ Nooxy rewrites Notion's HTML to give search engines exactly what they need:
 
 - **Zero dependencies** — Nothing to break, nothing to update
 - **Edge computing** — Runs on Cloudflare Workers' global network
-- **Node.js support** — Works with any modern Node.js runtime (18.17+)
+- **Node.js support** — Works with any modern Node.js runtime (22+)
 - **Multi-tenant** — Host multiple sites from one deployment
 - **Local development** — Test locally before deploying
 
@@ -132,6 +132,7 @@ Nooxy rewrites Notion's HTML to give search engines exactly what they need:
 This section shows how to add Nooxy to an **existing** JavaScript/TypeScript project. It works with Cloudflare Workers, Node.js, Deno, Bun, or any runtime that supports the Fetch API.
 
 For all configuration options and customization, see:
+
 - [Configuration Reference](#configuration-reference) — all config options
 - [Project Files](#project-files) — CSS, JavaScript, and HTML injection
 - [CLI Commands](#cli-commands) — available commands
@@ -178,9 +179,9 @@ Every Notion page has a unique **Page ID** — a 32-character code that identifi
 
 **Examples:**
 
-| URL | Page ID |
-|-----|---------|
-| `notion.so/Home-abc123def456789012345678901234ab` | `abc123def456789012345678901234ab` |
+| URL                                                             | Page ID                            |
+| --------------------------------------------------------------- | ---------------------------------- |
+| `notion.so/Home-abc123def456789012345678901234ab`               | `abc123def456789012345678901234ab` |
 | `myworkspace.notion.site/Blog-11122233344455566677788899900aaa` | `11122233344455566677788899900aaa` |
 
 **Important:** Make sure your Notion pages are **published to web** (Share → Publish → Publish to web).
@@ -205,14 +206,14 @@ export const SITE_CONFIG = {
   // Left side: URL on your site
   // Right side: Notion page ID (32 characters)
   slugToPage: {
-    '/': 'YOUR_HOME_PAGE_ID',           // yourdomain.com/
-    '/about': 'YOUR_ABOUT_PAGE_ID',     // yourdomain.com/about
-    '/blog': 'YOUR_BLOG_PAGE_ID',       // yourdomain.com/blog
+    '/': 'YOUR_HOME_PAGE_ID', // yourdomain.com/
+    '/about': 'YOUR_ABOUT_PAGE_ID', // yourdomain.com/about
+    '/blog': 'YOUR_BLOG_PAGE_ID', // yourdomain.com/blog
   },
 
   // SEO settings (optional but recommended)
   seo: {
-    indexing: true,                     // Allow search engines to index
+    indexing: true, // Allow search engines to index
     keywords: 'your, keywords, here',
     defaultAuthor: 'Your Name',
   },
@@ -256,7 +257,7 @@ export default {
 };
 ```
 
-**Node.js (18.17+):**
+**Node.js (22+):**
 
 ```typescript
 import { initializeNooxy } from 'nooxy';
@@ -265,21 +266,46 @@ import http from 'node:http';
 
 const proxy = initializeNooxy(SITE_CONFIG);
 
-http.createServer(async (req, res) => {
-  const url = `http://${req.headers.host}${req.url}`;
-  const request = new Request(url, {
-    method: req.method,
-    headers: req.headers,
+// Most hosts inject the port they expect you to bind.
+const PORT = Number(process.env.PORT ?? 8787);
+
+http
+  .createServer(async (req, res) => {
+    const url = `http://${req.headers.host}${req.url}`;
+
+    // Notion loads page content over POST /api/v3/..., so the body has to be
+    // forwarded or the page renders an empty shell. Node requires duplex: 'half'
+    // whenever the body is a stream.
+    const hasBody = req.method !== 'GET' && req.method !== 'HEAD';
+    const request = new Request(url, {
+      method: req.method,
+      headers: req.headers,
+      body: hasBody ? req : undefined,
+      duplex: hasBody ? 'half' : undefined,
+    });
+
+    const response = await proxy(request);
+
+    res.statusCode = response.status;
+
+    // Set-Cookie must be written as separate headers. headers.forEach() yields it
+    // once with the values comma-joined, and repeated setHeader() calls overwrite
+    // each other, so signing in would lose every cookie but the last.
+    const cookies = response.headers.getSetCookie();
+    if (cookies.length > 0) {
+      res.setHeader('set-cookie', cookies);
+    }
+    response.headers.forEach((value, key) => {
+      if (key.toLowerCase() !== 'set-cookie') {
+        res.setHeader(key, value);
+      }
+    });
+
+    res.end(Buffer.from(await response.arrayBuffer()));
+  })
+  .listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
   });
-  
-  const response = await proxy(request);
-  
-  res.statusCode = response.status;
-  response.headers.forEach((value, key) => res.setHeader(key, value));
-  res.end(Buffer.from(await response.arrayBuffer()));
-}).listen(8787, () => {
-  console.log('Server running at http://localhost:8787');
-});
 ```
 
 **Any Fetch-compatible runtime:**
@@ -300,10 +326,10 @@ const proxy = initializeNooxy(SITE_CONFIG);
 
 The Quick Start above covers Nooxy setup. If you need a complete walkthrough — from creating an account to deploying your live site — use these platform-specific guides:
 
-| Platform | Guide | Description |
-|----------|-------|-------------|
+| Platform               | Guide                                           | Description                                                |
+| ---------------------- | ----------------------------------------------- | ---------------------------------------------------------- |
 | **Cloudflare Workers** | [Full Guide →](./examples/cloudflare/README.md) | Recommended. Free tier, global edge network, ~15 min setup |
-| **Node.js** | Coming soon | For self-hosted servers |
+| **Node.js**            | Coming soon                                     | For self-hosted servers                                    |
 
 These guides include all the Nooxy setup steps plus platform-specific deployment instructions.
 
@@ -315,30 +341,30 @@ All configuration is in `nooxy/config.js`. After any changes, run `npx nooxy gen
 
 ### Required Fields
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `domain` | Your custom domain (without https://) | `example.com` |
-| `notionDomain` | Your Notion workspace domain (prevents serving unintended Notion content) | `myname.notion.site` |
-| `siteName` | Site name for browser tabs, SEO, and `og:site_name` | `My Portfolio` |
-| `slugToPage` | URL path → Notion page ID mapping (32-char hex IDs) | `{ '/': 'abc123...' }` |
+| Field          | Description                                                               | Example                |
+| -------------- | ------------------------------------------------------------------------- | ---------------------- |
+| `domain`       | Your custom domain (without https://)                                     | `example.com`          |
+| `notionDomain` | Your Notion workspace domain (prevents serving unintended Notion content) | `myname.notion.site`   |
+| `siteName`     | Site name for browser tabs, SEO, and `og:site_name`                       | `My Portfolio`         |
+| `slugToPage`   | URL path → Notion page ID mapping (32-char hex IDs)                       | `{ '/': 'abc123...' }` |
 
 ### Generated Fields
 
 These fields are auto-populated by `npx nooxy generate` from files in the `nooxy/` folder. Don't edit them directly — edit the source files instead:
 
-| Field | Source File | Purpose |
-|-------|-------------|---------|
-| `customHeadCSS` | `nooxy/head.css` | CSS injected into `<head>` |
-| `customHeadJS` | `nooxy/head.js` | JavaScript injected into `<head>` (runs before page loads) |
-| `customBodyJS` | `nooxy/body.js` | JavaScript injected before `</body>` (runs after page loads) |
-| `customHeader` | `nooxy/header.html` | HTML injected into page header (navigation, banners, etc.) |
+| Field           | Source File         | Purpose                                                      |
+| --------------- | ------------------- | ------------------------------------------------------------ |
+| `customHeadCSS` | `nooxy/head.css`    | CSS injected into `<head>`                                   |
+| `customHeadJS`  | `nooxy/head.js`     | JavaScript injected into `<head>` (runs before page loads)   |
+| `customBodyJS`  | `nooxy/body.js`     | JavaScript injected before `</body>` (runs after page loads) |
+| `customHeader`  | `nooxy/header.html` | HTML injected into page header (navigation, banners, etc.)   |
 
 ### SEO Configuration
 
 ```javascript
 seo: {
   // Enable search engine indexing (default: true)
-  // When true: removes Notion's noindex tags, adds canonical URLs, 
+  // When true: removes Notion's noindex tags, adds canonical URLs,
   // injects robots meta, generates sitemap.xml and robots.txt
   indexing: true,
 
@@ -390,17 +416,26 @@ pageMetadata: {
 
 ### Social & Branding
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `twitterHandle` | Twitter/X handle for `twitter:site` meta tag (include @) | `@yourusername` |
-| `siteIcon` | Custom favicon URL (.ico format). If not set, uses Notion's default | `https://example.com/favicon.ico` |
+| Field           | Description                                                         | Example                           |
+| --------------- | ------------------------------------------------------------------- | --------------------------------- |
+| `twitterHandle` | Twitter/X handle for `twitter:site` meta tag (include @)            | `@yourusername`                   |
+| `siteIcon`      | Custom favicon URL (.ico format). If not set, uses Notion's default | `https://example.com/favicon.ico` |
+
+The icon is fetched by your server, so a few limits apply. Any of these falls back
+to Notion's favicon and logs the reason — your site keeps working either way:
+
+- must be `http://` or `https://`
+- must not be a loopback or link-local address (`localhost`, `127.x.x.x`, `::1`,
+  `169.254.x.x`) — a private LAN address such as `10.0.0.5` is fine, so serving
+  the icon from another container works
+- must respond within 3 seconds and be under 512 KB
 
 ### Typography & Analytics
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `googleFont` | Google Font family name from [fonts.google.com](https://fonts.google.com). Applied site-wide | `Inter`, `Roboto` |
-| `googleTagID` | Google Analytics 4 measurement ID. Injects GA4 tracking script | `G-XXXXXXXXXX` |
+| Field         | Description                                                                                  | Example           |
+| ------------- | -------------------------------------------------------------------------------------------- | ----------------- |
+| `googleFont`  | Google Font family name from [fonts.google.com](https://fonts.google.com). Applied site-wide | `Inter`, `Roboto` |
+| `googleTagID` | Google Analytics 4 measurement ID. Injects GA4 tracking script                               | `G-XXXXXXXXXX`    |
 
 ### 404 Page
 
@@ -442,15 +477,15 @@ nooxy: {
 
 These features work automatically — no configuration needed:
 
-| Feature | URL | Description |
-|---------|-----|-------------|
-| **Sitemap** | `/sitemap.xml` | Auto-generated XML sitemap with all pages from `slugToPage` |
-| **Robots.txt** | `/robots.txt` | Points crawlers to your sitemap |
-| **Clean URLs** | — | Rewrites Notion URLs (`/Page-abc123`) to your slugs (`/about`) |
-| **JSON-LD Schema** | — | Injects structured data for rich search results |
-| **Canonical URLs** | — | Adds `<link rel="canonical">` to every page |
-| **Open Graph** | — | Rewrites `og:url`, `og:site_name` for proper social sharing |
-| **Twitter Cards** | — | Rewrites `twitter:url`, `twitter:site` for Twitter/X previews |
+| Feature            | URL            | Description                                                    |
+| ------------------ | -------------- | -------------------------------------------------------------- |
+| **Sitemap**        | `/sitemap.xml` | Auto-generated XML sitemap with all pages from `slugToPage`    |
+| **Robots.txt**     | `/robots.txt`  | Points crawlers to your sitemap                                |
+| **Clean URLs**     | —              | Rewrites Notion URLs (`/Page-abc123`) to your slugs (`/about`) |
+| **JSON-LD Schema** | —              | Injects structured data for rich search results                |
+| **Canonical URLs** | —              | Adds `<link rel="canonical">` to every page                    |
+| **Open Graph**     | —              | Rewrites `og:url`, `og:site_name` for proper social sharing    |
+| **Twitter Cards**  | —              | Rewrites `twitter:url`, `twitter:site` for Twitter/X previews  |
 
 ---
 
@@ -468,7 +503,40 @@ npx nooxy generate --path=./my-project
 
 # Generate without minification (for debugging)
 npx nooxy generate --no-minify
+
+# Print the installed version (useful in bug reports)
+npx nooxy --version
 ```
+
+---
+
+## Hosting Several Sites From One Deployment
+
+One worker can serve any number of Notion sites. Each one needs its **own
+`configKey`**, which is what keeps its config separate:
+
+```typescript
+import { initializeNooxy } from 'nooxy';
+import { SITE_CONFIG as SITE_A } from '../nooxy-a/config';
+import { SITE_CONFIG as SITE_B } from '../nooxy-b/config';
+
+const siteA = initializeNooxy({ configKey: 'site-a', config: SITE_A });
+const siteB = initializeNooxy({ configKey: 'site-b', config: SITE_B });
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const host = new URL(request.url).hostname;
+
+    return host.endsWith('b.example') ? siteB(request) : siteA(request);
+  },
+};
+```
+
+Config is processed once and cached per key. If you omit `configKey`, the site's
+`domain` is used as the key, so two sites on different domains stay separate
+anyway — but passing an explicit key is clearer, and it is required if two sites
+share a domain. Reusing one key for two different configs logs a warning and keeps
+the first, since silently serving one site's domain for another is worse.
 
 ---
 
@@ -527,7 +595,9 @@ CSS injected into `<head>`. Use this to override Notion's default styles:
 
 ```css
 /* Hide Notion's top bar */
-.notion-topbar { display: none !important; }
+.notion-topbar {
+  display: none !important;
+}
 
 /* Custom page styling */
 .notion-page-content {
@@ -542,6 +612,7 @@ CSS injected into `<head>`. Use this to override Notion's default styles:
 ```
 
 **Tips:**
+
 - Use `!important` to override Notion's styles
 - Notion uses `.dark` class for dark mode
 - Inspect your Notion page to find class names to target
@@ -549,6 +620,7 @@ CSS injected into `<head>`. Use this to override Notion's default styles:
 #### `head.js` — Early JavaScript
 
 JavaScript injected into `<head>`. Runs **before** the page content loads. Use for:
+
 - Analytics that need to run early
 - Setting up global variables
 - Theme detection before render
@@ -562,6 +634,7 @@ document.documentElement.setAttribute('data-theme', theme);
 #### `body.js` — Main JavaScript
 
 JavaScript injected before `</body>`. Runs **after** the page content loads. Use for:
+
 - DOM manipulation
 - Event listeners
 - Interactive features
@@ -569,11 +642,11 @@ JavaScript injected before `</body>`. Runs **after** the page content loads. Use
 ```javascript
 document.addEventListener('DOMContentLoaded', () => {
   // Add smooth scrolling
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener('click', (e) => {
       e.preventDefault();
       document.querySelector(anchor.getAttribute('href')).scrollIntoView({
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     });
   });
@@ -637,42 +710,42 @@ User Response <-- Modified HTML
 
 ### vs Notion Sites
 
-| | Notion Sites | Nooxy |
-|---|---|---|
-| **Price** | $10-22/mo | Free |
-| **Custom domain** | Paid add-on | Included |
-| **SEO control** | Limited | Full |
-| **CSS/JS injection** | No | Yes |
-| **noindex removal** | Manual | Automatic |
+|                      | Notion Sites | Nooxy     |
+| -------------------- | ------------ | --------- |
+| **Price**            | $10-22/mo    | Free      |
+| **Custom domain**    | Paid add-on  | Included  |
+| **SEO control**      | Limited      | Full      |
+| **CSS/JS injection** | No           | Yes       |
+| **noindex removal**  | Manual       | Automatic |
 
 ### vs Super.so
 
-| | Super.so | Nooxy |
-|---|---|---|
-| **Price** | $12-28/mo | Free |
+|                          | Super.so      | Nooxy     |
+| ------------------------ | ------------- | --------- |
+| **Price**                | $12-28/mo     | Free      |
 | **Notion interactivity** | Lost (static) | Preserved |
-| **Database filtering** | No | Yes |
-| **Real-time updates** | No | Yes |
+| **Database filtering**   | No            | Yes       |
+| **Real-time updates**    | No            | Yes       |
 
 ### vs Fruition
 
-| | Fruition | Nooxy |
-|---|---|---|
-| **Maintained** | No (2020) | Yes (2024+) |
-| **SEO features** | Basic | Comprehensive |
-| **TypeScript** | No | Yes |
-| **CLI tools** | No | Yes |
+|                  | Fruition  | Nooxy         |
+| ---------------- | --------- | ------------- |
+| **Maintained**   | No (2020) | Yes (2024+)   |
+| **SEO features** | Basic     | Comprehensive |
+| **TypeScript**   | No        | Yes           |
+| **CLI tools**    | No        | Yes           |
 
 ---
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| **Pages return 404** | Verify page IDs are 32 characters, pages are published in Notion, `notionDomain` matches your workspace |
-| **CSS not applied** | Run `npx nooxy generate` after changes, use `!important` to override Notion styles |
-| **SEO tags not appearing** | Ensure `seo.indexing` is `true`, view page source (not rendered DOM), redeploy |
-| **"Cannot find module 'nooxy'"** | Run `npm install nooxy` |
+| Problem                          | Solution                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Pages return 404**             | Verify page IDs are 32 characters, pages are published in Notion, `notionDomain` matches your workspace |
+| **CSS not applied**              | Run `npx nooxy generate` after changes, use `!important` to override Notion styles                      |
+| **SEO tags not appearing**       | Ensure `seo.indexing` is `true`, view page source (not rendered DOM), redeploy                          |
+| **"Cannot find module 'nooxy'"** | Run `npm install nooxy`                                                                                 |
 
 ---
 

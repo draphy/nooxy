@@ -2,91 +2,88 @@ import fs from 'fs';
 import path from 'path';
 import { minifyFile } from '../lib/minify';
 
-export async function generate(customPath?: string, shouldMinify = true) {
+/** The four assets `nooxy/config.js` imports, in the order they are reported. */
+const ASSETS = [
+  { source: 'head.js', output: '_head-js-string.js', constant: 'HEAD_JS_STRING', type: 'js', label: 'JavaScript' },
+  { source: 'body.js', output: '_body-js-string.js', constant: 'BODY_JS_STRING', type: 'js', label: 'JavaScript' },
+  { source: 'head.css', output: '_head-css-string.js', constant: 'HEAD_CSS_STRING', type: 'css', label: 'CSS' },
+  {
+    source: 'header.html',
+    output: '_header-html-string.js',
+    constant: 'HEADER_HTML_STRING',
+    type: 'html',
+    label: 'HTML',
+  },
+] as const;
+
+export interface GenerateResult {
+  generated: number;
+  missing: number;
+  failed: number;
+}
+
+/**
+ * Rebuilds the injected assets from the files in `nooxy/`.
+ *
+ * @param customPath - project root; defaults to the working directory
+ * @param shouldMinify - false leaves the output readable
+ */
+export async function generate(customPath?: string, shouldMinify = true): Promise<GenerateResult> {
   const rootDir = customPath ? path.resolve(customPath) : process.cwd();
   const nooxyDir = path.join(rootDir, 'nooxy');
   const generatedDir = path.join(nooxyDir, 'generated');
 
-  // Create output directory if it doesn't exist
+  const result: GenerateResult = { generated: 0, missing: 0, failed: 0 };
+
+  // Checked before anything is created. mkdirSync(recursive) used to build
+  // `nooxy/generated/` inside whatever directory it was pointed at, so running
+  // this from the wrong folder — or with a typo'd --path — left a stray tree
+  // behind and still exited 0, which reads as "your changes were applied".
+  if (!fs.existsSync(nooxyDir)) {
+    console.error(`❌ No nooxy/ folder found in ${rootDir}`);
+    console.error('   Run `npx nooxy init` first, or point at the project root with --path=<dir>.');
+    result.failed += 1;
+
+    return result;
+  }
+
   if (!fs.existsSync(generatedDir)) {
     fs.mkdirSync(generatedDir, { recursive: true });
   }
 
-  // File paths
+  for (const asset of ASSETS) {
+    const sourcePath = path.join(nooxyDir, asset.source);
+    const outputPath = path.join(generatedDir, asset.output);
 
-  // Head JS Conversion
-  const headJsPath = path.join(nooxyDir, 'head.js');
-  const outHeadJsString = path.join(generatedDir, '_head-js-string.js');
-  const HEAD_JS_STRING = 'HEAD_JS_STRING';
-
-  // Body JS Conversion
-  const bodyJsPath = path.join(nooxyDir, 'body.js');
-  const outBodyJsString = path.join(generatedDir, '_body-js-string.js');
-  const BODY_JS_STRING = 'BODY_JS_STRING';
-
-  // Head CSS Conversion
-  const headCssPath = path.join(nooxyDir, 'head.css');
-  const outHeadCssString = path.join(generatedDir, '_head-css-string.js');
-  const HEAD_CSS_STRING = 'HEAD_CSS_STRING';
-
-  // Header HTML Conversion
-  const headerHtmlPath = path.join(nooxyDir, 'header.html');
-  const outHeaderHtmlString = path.join(generatedDir, '_header-html-string.js');
-  const HEADER_HTML_STRING = 'HEADER_HTML_STRING';
-
-  // Read and write head.js
-  try {
-    if (fs.existsSync(headJsPath)) {
-      console.log('🔄 Processing JavaScript file...');
-      minifyFile(headJsPath, outHeadJsString, HEAD_JS_STRING, shouldMinify, 'js');
-    } else {
-      console.log(`⚠️  JavaScript file not found: ${headJsPath}`);
+    if (!fs.existsSync(sourcePath)) {
+      // The constant is still written, empty.
+      //
+      // nooxy/config.js imports all four generated modules unconditionally, so
+      // skipping one left that import unresolvable and the whole site failed to
+      // start with "Cannot find module" — even though the README documents these
+      // four source files as optional. Writing an empty constant makes them
+      // genuinely optional, and also clears a stale value left behind when a
+      // source file is deleted rather than emptied.
+      //
+      // Previously a success line was printed here regardless, so the output also
+      // claimed to have generated a file that was never written.
+      fs.writeFileSync(outputPath, `export const ${asset.constant} = \`\`;\n`, 'utf8');
+      console.log(`⚠️  ${asset.label} file not found: ${sourcePath}`);
+      console.log(`   Wrote an empty ${asset.constant} so nooxy/config.js still resolves.`);
+      result.missing += 1;
+      continue;
     }
-    console.log(`✅ Generated ${outHeadJsString}`);
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  } catch (err: any) {
-    console.error(`❌ Failed to process head.js: ${err.message}`);
+
+    try {
+      console.log(`🔄 Processing ${asset.label} file...`);
+      minifyFile(sourcePath, outputPath, asset.constant, shouldMinify, asset.type);
+      console.log(`✅ Generated ${outputPath}`);
+      result.generated += 1;
+    } catch (error) {
+      console.error(`❌ Failed to process ${asset.source}: ${error instanceof Error ? error.message : error}`);
+      result.failed += 1;
+    }
   }
 
-  // Read and write body.js
-  try {
-    if (fs.existsSync(bodyJsPath)) {
-      console.log('🔄 Processing JavaScript file...');
-      minifyFile(bodyJsPath, outBodyJsString, BODY_JS_STRING, shouldMinify, 'js');
-    } else {
-      console.log(`⚠️  JavaScript file not found: ${bodyJsPath}`);
-    }
-    console.log(`✅ Generated ${outBodyJsString}`);
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  } catch (err: any) {
-    console.error(`❌ Failed to process body.js: ${err.message}`);
-  }
-
-  // Read and write head.css
-  try {
-    if (fs.existsSync(headCssPath)) {
-      console.log('🔄 Processing CSS file...');
-      minifyFile(headCssPath, outHeadCssString, HEAD_CSS_STRING, shouldMinify, 'css');
-    } else {
-      console.log(`⚠️  CSS file not found: ${headCssPath}`);
-    }
-    console.log(`✅ Generated ${outHeadCssString}`);
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  } catch (err: any) {
-    console.error(`❌ Failed to process head.css: ${err.message}`);
-  }
-
-  // Read and write header.html
-  try {
-    if (fs.existsSync(headerHtmlPath)) {
-      console.log('🔄 Processing HTML file...');
-      minifyFile(headerHtmlPath, outHeaderHtmlString, HEADER_HTML_STRING, shouldMinify, 'html');
-    } else {
-      console.log(`⚠️  HTML file not found: ${headerHtmlPath}`);
-    }
-    console.log(`✅ Generated ${outHeaderHtmlString}`);
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  } catch (err: any) {
-    console.error(`❌ Failed to process header.html: ${err.message}`);
-  }
+  return result;
 }

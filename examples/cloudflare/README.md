@@ -8,7 +8,7 @@ A complete, step-by-step guide to deploy your Notion site on Cloudflare Workers.
 
 Before starting, make sure you have:
 
-- [ ] **Node.js** (v18.17 or higher) — [Download here](https://nodejs.org) if you don't have it
+- [ ] **Node.js** (v22 or higher) — [Download here](https://nodejs.org) if you don't have it
 - [ ] **A Cloudflare account** — [Sign up free](https://dash.cloudflare.com/sign-up) (no credit card required)
 - [ ] **A Notion page** — Any page you want to turn into a website
 

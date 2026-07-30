@@ -67,4 +67,11 @@ function main() {
   }
 }
 
-main();
+// minifyFile throws on a malformed asset rather than exiting, so the build has
+// to report it. Without this the failure would surface as a raw stack trace.
+try {
+  main();
+} catch (error) {
+  console.error(`❌ ${error instanceof Error ? error.message : error}`);
+  process.exit(1);
+}

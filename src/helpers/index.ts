@@ -2,10 +2,14 @@ export * from './config-loader';
 
 export function ensureHttpsUrl(url: string) {
   const input = url.trim();
-  if (input.startsWith('https://')) {
+  // URL schemes are case-insensitive, so compare in lower case. Matching only
+  // the lower-case form turned "HTTP://example.com" into
+  // "https://HTTP://example.com", which parses to the host "http".
+  const scheme = input.slice(0, 8).toLowerCase();
+  if (scheme.startsWith('https://')) {
     return input;
   }
-  if (input.startsWith('http://')) {
+  if (scheme.startsWith('http://')) {
     return `https://${input.slice(7)}`;
   }
   return `https://${input}`;
@@ -20,7 +24,11 @@ export function resolveProxyPath(url: string, slugToPage: Record<string, string>
   const pageId = slugToPage[slug];
   if (pageId) {
     const regex = new RegExp(`${escapeRegExp(slug)}(?=\\?|$)`);
-    return url.replace(regex, `/${pageId}`);
+    // Replacer function, not a string: a page id containing $&, $`, $' or $1
+    // would otherwise expand against the match and splice part of the URL into
+    // the path. normalizePageId leaves anything that is not valid 32-char hex
+    // untouched, so a mistyped slugToPage value reaches this line intact.
+    return url.replace(regex, () => `/${pageId}`);
   }
   return url;
 }
@@ -43,7 +51,9 @@ function extractSlug(url: string) {
 
 // Helper function to handle pseudo endpoints
 export function handlePseudoEndpoint(url: string): Response | null {
-  if (/^\/200\/?/.test(url)) {
+  // The segment must end here: "/200" and "/200/..." are pseudo endpoints, but
+  // "/2000" is an ordinary slug someone may well have configured.
+  if (/^\/200(?:\/|$)/.test(url)) {
     if (url.startsWith('/200/www.notion.so/api/v3/')) {
       return new Response('success', { status: 200 });
     } else if (url.startsWith('/200/exp.notion.so/v1/')) {
@@ -65,11 +75,16 @@ export const getUrlState = (url: string) => {
     isLocalhost,
     protocol: urlObj.protocol,
     port: urlObj.port,
-    domain: isLocalhost ? `${urlObj.hostname}:${urlObj.port}` : urlObj.hostname,
+    // `host` carries the port only when one is present. Building it by hand left
+    // a trailing colon ("localhost:") when the URL had no explicit port.
+    domain: isLocalhost ? urlObj.host : urlObj.hostname,
   };
 };
 
-const checkLocalhost = (hostname: string) => localhost.includes(hostname);
+// `URL.hostname` keeps the brackets on an IPv6 literal — 'http://[::1]/' yields
+// '[::1]', not '::1' — so the '::1' entry below never matched and IPv6 loopback
+// was not recognised as local. handle-favicon.ts strips them the same way.
+const checkLocalhost = (hostname: string) => localhost.includes(hostname.replace(/^\[|]$/g, '').toLowerCase());
 const localhost = ['localhost', '127.0.0.1', '::1'];
 const STATIC_PATHS = new Set(['/robots.txt', '/sitemap.xml', '/favicon.ico']);
 const STATIC_ASSETS_REGEX = /^\/(_assets|image|f\/refresh)/;

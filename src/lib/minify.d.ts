@@ -25,6 +25,10 @@ export interface MinifyResult {
  * @param minify - Whether to minify the code
  * @param fileType - Type of file: 'js', 'css', or 'html'
  * @returns Object containing original and processed file sizes
+ * @throws Error if the input cannot be read, or if the minified output fails its
+ *   sanity check — a malformed asset must not be written. Callers are expected to
+ *   report and continue with the remaining assets; this used to call
+ *   process.exit(1), which abandoned them.
  */
 export declare function minifyFile(
   inputFilePath: string,
