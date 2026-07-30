@@ -37,22 +37,78 @@ function buildCustomHeader(customHeader, showBadge) {
   document.body ? init() : document.addEventListener('DOMContentLoaded', init);
 })();
 
+// Deliberately NOT identical to extractSlug in src/helpers/index.ts, for the same
+// reason as extractPageId below: this copy also strips '#hash', because it runs in
+// the browser where location.href carries a fragment. The server never receives
+// one. Do not "align" them.
 function extractSlug(url) {
   if (url.startsWith('/')) {
-    return url.split('?')[0];
+    return url.split('?')[0].split('#')[0];
   }
   try {
     const u = new URL(url);
     return u.pathname;
   } catch (_e) {
-    return url.split('?')[0];
+    return url.split('?')[0].split('#')[0];
   }
 }
 
+// pageToSlug keys are normalized to lowercase by ConfigManager, so lowercase
+// here too.
+//
+// Deliberately NOT identical to extractPageId in src/helpers/index.ts: this one
+// also strips '#hash', because it runs in the browser where location.href carries
+// a fragment. The server never receives one, so the helper has no reason to. Do
+// not "align" them.
 function extractPageId(input) {
-  const path = input.split('?')[0];
+  const path = input.split('?')[0].split('#')[0];
   const match = path.match(/([a-fA-F0-9]{32})(?=\/?$)/);
-  return match ? match[1] : '';
+  return match ? match[1].toLowerCase() : '';
+}
+
+// Slugs are user-authored config values and may contain regex metacharacters
+// (e.g. '/v1.0', '/c++'). Mirrors escapeRegExp in src/helpers/index.ts.
+//
+// Written with a replacer function rather than the '$&' token. That is belt and
+// braces today: the injection site in data-rewriter.ts already passes a replacer
+// function, so a literal '$&' in this file's text is safe. Keeping this file free
+// of '$&' means it stays safe if that injection ever goes back to a replacement
+// string.
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, (match) => `\\${match}`);
+}
+
+// Split off the '?query' / '#hash' tail.
+function splitUrlTail(url) {
+  const q = url.indexOf('?');
+  const h = url.indexOf('#');
+  let cut;
+  if (q === -1) {
+    cut = h;
+  } else if (h === -1) {
+    cut = q;
+  } else {
+    cut = q < h ? q : h;
+  }
+  return cut === -1 ? [url, ''] : [url.slice(0, cut), url.slice(cut)];
+}
+
+// 'https://host/a/b' -> 'https://host'; '//host/a' -> '//host'; '/a/b' -> ''
+function originOf(url) {
+  let start = -1;
+  if (url.startsWith('//')) {
+    start = 2;
+  } else {
+    const scheme = url.indexOf('://');
+    if (scheme !== -1) {
+      start = scheme + 3;
+    }
+  }
+  if (start === -1) {
+    return '';
+  }
+  const slash = url.indexOf('/', start);
+  return slash === -1 ? url : url.slice(0, slash);
 }
 
 window.nooxy = {
@@ -60,23 +116,35 @@ window.nooxy = {
   _pageToSlug: pageToSlug,
   _notionDomain: notionDomain,
   _myUrl: function (url) {
+    if (typeof url !== 'string') {
+      return url;
+    }
     const notionUrl = url.replace(location.origin, this._notionDomain);
     const slug = extractSlug(notionUrl);
     const pageId = slugToPage[slug];
     if (pageId) {
-      const regex = new RegExp(`${slug}(?=\\?|$)`);
+      const regex = new RegExp(`${escapeRegExp(slug)}(?=\\?|#|$)`);
       return notionUrl.replace(regex, `/${pageId}`);
     }
     return notionUrl;
   },
   _yourUrl: function (url) {
+    // history.pushState/replaceState may be called with the url argument
+    // omitted, in which case there is nothing to translate.
+    if (typeof url !== 'string') {
+      return url;
+    }
     const cDomainUrl = url.replace(this._notionDomain, location.origin);
     const pageId = extractPageId(cDomainUrl);
     const slug = pageToSlug[pageId];
-    if (slug) {
-      return cDomainUrl.replace(new RegExp(`(^|[^/])\\/[^/].*${pageId}(?=\\?|$)`), `$1${slug}`);
+    if (!slug) {
+      return cDomainUrl;
     }
-    return cDomainUrl;
+    // Notion writes '/<pageId>' while booting and '/<Title>-<pageId>' once the
+    // page record loads. Replace the whole path with the configured slug so
+    // both shapes resolve, keeping origin, query and hash intact.
+    const parts = splitUrlTail(cDomainUrl);
+    return originOf(parts[0]) + slug + parts[1];
   },
   href: function () {
     return this._myUrl(location.href);
