@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Nooxy! This document provides gui
 
 ## Code of Conduct
 
-By participating in this project, you agree to uphold our Code of Conduct, which expects all contributors to be respectful and create a harassment-free experience for everyone.
+By participating in this project, you agree to uphold our [Code of Conduct](CODE_OF_CONDUCT.md), which expects all contributors to be respectful and create a harassment-free experience for everyone.
 
 ## Contribution Workflow
 
@@ -144,9 +144,17 @@ The git hooks in `.githooks/` are wired up automatically by `pnpm install` (via 
 | --- | --- | --- |
 | `pnpm commit:check` | lint, types, build, tests | what `pre-push` runs |
 | `pnpm test` | the suite only | while iterating |
-| `pnpm test:mutation` | breaks the source deliberately and checks a test notices | before a release |
+| `pnpm test:mutation` | breaks the source deliberately and checks a test notices | required on every PR |
 | `pnpm check:generated` | builds, then fails if the build changed a committed file | what CI checks |
 | `pnpm test:coverage` | the suite with line/branch coverage | when adding a module |
+
+The full mutation run takes a while, because each mutation is a build plus the
+whole suite. CI splits it across twelve parallel shards; to reproduce one
+locally, pass the same argument the workflow does:
+
+```bash
+pnpm test:mutation -- --shard=3/12
+```
 
 Coverage runs against `dist/`, because the tests exercise the built bundle on purpose.
 Ignore the CLI's figure — `cli.test.mjs` runs it as a child process, which the

@@ -8,7 +8,8 @@
 // history, not invented at random, so a survivor names a class of bug that
 // could be reintroduced today without a single test going red.
 //
-// Usage: pnpm test:mutation [-- <substring>]   (filters by mutation name)
+// Usage: pnpm test:mutation [-- <substring>]        (filters by mutation name)
+//        pnpm test:mutation -- --shard=3/12         (runs one shard, as CI does)
 //
 // SAFETY: every target file is hashed before anything is touched and verified
 // byte-identical at the end — and so are the files the build *derives* from them
@@ -312,12 +313,71 @@ const MUTATIONS = [
   },
 ];
 
-const filter = process.argv[2];
-const selected = filter ? MUTATIONS.filter((m) => m.name.includes(filter)) : MUTATIONS;
+const args = process.argv.slice(2);
 
-if (selected.length === 0) {
+/**
+ * Validated before the name filter, not after.
+ *
+ * `--shard 1/12` with a space arrives as two arguments, and the second would
+ * otherwise be read as a name filter and fail with "No mutation matches 1/12",
+ * which points at the wrong thing.
+ *
+ * Matching on the `--shard` prefix rather than `--shard=` is deliberate: it is
+ * what makes `--shard`, `--shard=`, `--shards=1/12` and `--shard=1.9/12` all
+ * fail loudly. Reading only `--shard=` left every one of them falsy, which
+ * silently ran the whole suite instead of a twelfth of it — 27 minutes when you
+ * asked for 27 seconds, and in CI a timeout that blames the wrong thing.
+ */
+const shardFlag = args.find((a) => a.startsWith('--shard'));
+
+if (shardFlag && !/^--shard=\d+\/\d+$/.test(shardFlag)) {
+  console.error(`Expected --shard=i/n with whole numbers, got ${JSON.stringify(shardFlag)}`);
+  process.exit(1);
+}
+
+const filter = args.find((a) => !a.startsWith('--'));
+const filtered = filter ? MUTATIONS.filter((m) => m.name.includes(filter)) : MUTATIONS;
+
+if (filtered.length === 0) {
   console.error(`No mutation matches ${JSON.stringify(filter)}`);
   process.exit(1);
+}
+
+/**
+ * Splits the run across parallel CI jobs: --shard=2/6 runs the second sixth.
+ *
+ * Round robin rather than contiguous slices, deliberately. Mutations are grouped
+ * by file in the list above, and a contiguous slice would hand one shard every
+ * favicon mutation while another got every CLI one. Their runtimes differ enough
+ * that the slowest shard would decide the wall clock. Striding by shard count
+ * mixes the files evenly instead.
+ *
+ * Every shard still rebuilds and re-verifies the whole tree, so a shard is a
+ * complete run over fewer mutations, not a partial run.
+ */
+let selected = filtered;
+
+if (shardFlag) {
+  // Shape is already guaranteed by the check above, so only the range is left.
+  const [rawIndex, rawTotal] = shardFlag.slice('--shard='.length).split('/');
+  const index = Number.parseInt(rawIndex, 10);
+  const total = Number.parseInt(rawTotal, 10);
+
+  if (total < 1 || index < 1 || index > total) {
+    console.error(`Expected --shard=i/n with 1 <= i <= n, got ${JSON.stringify(shardFlag)}`);
+    process.exit(1);
+  }
+
+  selected = filtered.filter((_, i) => i % total === index - 1);
+  console.log(`shard ${index}/${total}: ${selected.length} of ${filtered.length} mutations\n`);
+
+  // A shard with nothing to do is not an error. It means more shards than
+  // mutations, which is wasteful but not wrong, and failing here would turn a
+  // harmless matrix into a red build.
+  if (selected.length === 0) {
+    console.log('nothing to do in this shard');
+    process.exit(0);
+  }
 }
 
 const hash = (file) =>
@@ -350,14 +410,25 @@ const before = Object.fromEntries(guarded.map((file) => [file, hash(file)]));
 // it would fail with ENOENT before a single mutation ran.
 const PNPM = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 
-function run(args) {
+function run(args, env) {
   try {
-    execFileSync(PNPM, args, { cwd: ROOT, stdio: 'pipe', encoding: 'utf8' });
+    execFileSync(PNPM, args, { cwd: ROOT, stdio: 'pipe', encoding: 'utf8', env: { ...process.env, ...env } });
     return { ok: true };
   } catch (error) {
     return { ok: false, output: `${error.stdout ?? ''}${error.stderr ?? ''}` };
   }
 }
+
+/**
+ * Skips `biome:fix` inside the loop. Formatting cannot change behaviour, so it
+ * cannot change whether a mutation is caught, and it ran on every build.
+ *
+ * It is also the one step in the loop that writes to files other than the one
+ * being mutated, so dropping it removes a source of drift rather than adding
+ * one. The final rebuild below still runs the full build, formatting included,
+ * because that is what the integrity check compares against.
+ */
+const LOOP_BUILD_ENV = { NOOXY_SKIP_FORMAT: '1' };
 
 /**
  * Matches a mutation against a file, tolerating CRLF.
@@ -438,6 +509,41 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
   });
 }
 
+/**
+ * The suite has to be green before anything is broken on purpose.
+ *
+ * A mutation is judged caught when `pnpm test` fails. If it already fails, every
+ * mutation is caught for a reason that has nothing to do with the mutation, and
+ * the run reports zero survivors while proving nothing. Measured on a tree with
+ * 69 unrelated failures: three of three mutations "caught", all meaningless.
+ *
+ * Stryker runs a dry run first for the same reason — it checks the setup
+ * succeeds while no mutant is active. Costs one build and one suite per shard.
+ */
+process.stdout.write('baseline: build + suite ... ');
+
+const baselineBuild = run(['build'], LOOP_BUILD_ENV);
+
+if (!baselineBuild.ok) {
+  console.log('FAILED');
+  console.error('\nThe build fails with no mutation applied, so nothing below would mean anything.\n');
+  console.error(baselineBuild.output.trim().split('\n').slice(-15).join('\n'));
+  process.exit(2);
+}
+
+const baselineTest = run(['test']);
+
+if (!baselineTest.ok) {
+  console.log('FAILED');
+  console.error('\nThe suite fails with no mutation applied. Every mutation below would be');
+  console.error('reported as caught, and this run would claim a perfect score while proving');
+  console.error('nothing. Fix the failing tests first.\n');
+  console.error(baselineTest.output.trim().split('\n').slice(-15).join('\n'));
+  process.exit(2);
+}
+
+console.log('green\n');
+
 const results = [];
 
 for (const [index, mutation] of selected.entries()) {
@@ -461,7 +567,7 @@ for (const [index, mutation] of selected.entries()) {
     inFlight = { path: absolute, original };
     fs.writeFileSync(absolute, applyMutation(original, located.find, located.replace));
 
-    const built = run(['build']);
+    const built = run(['build'], LOOP_BUILD_ENV);
     if (!built.ok) {
       // A mutation the compiler rejects is caught by the toolchain, which is a
       // legitimate defence — but a weaker one than a failing test, so it is
