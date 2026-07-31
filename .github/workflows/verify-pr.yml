@@ -22,6 +22,22 @@ jobs:
     permissions: {}
     steps:
       - name: Check PR Title
+        # Dependabot writes its own titles and has no Linear issue to reference,
+        # so the [DRO-N] convention cannot apply to it. Those PRs still need an
+        # approval and a code owner review to merge, so nothing is loosened
+        # beyond the title format itself.
+        #
+        # Guarded on the step rather than the job on purpose: "PR Title Check"
+        # is a required status check, and a skipped job risks leaving it pending
+        # forever instead of passing. Skipping the only step lets the job report
+        # success.
+        #
+        # Keyed on the PR author, not github.actor: this workflow also runs on
+        # `edited`, where github.actor is whoever renamed the title rather than
+        # Dependabot. Matching the branch name would be wrong in the other
+        # direction — a human PR opened from a dependabot/* branch should still
+        # be checked.
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         shell: bash
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -57,6 +73,10 @@ jobs:
             echo "✅ PR title format is valid!"
           fi
 
+  # NOTE: this reports as "Has Conflicts" and is listed as a required check, but
+  # continue-on-error below means the job cannot fail — it labels, it does not
+  # gate. Nothing is lost by that: GitHub blocks a conflicted merge on its own.
+  # Treat the check as informational rather than protection.
   label-merge-conflicts:
     name: Has Conflicts
     runs-on: ubuntu-latest
