@@ -594,11 +594,6 @@ export const SITE_CONFIG = {
 CSS injected into `<head>`. Use this to override Notion's default styles:
 
 ```css
-/* Hide Notion's top bar */
-.notion-topbar {
-  display: none !important;
-}
-
 /* Custom page styling */
 .notion-page-content {
   max-width: 900px;
@@ -613,9 +608,29 @@ CSS injected into `<head>`. Use this to override Notion's default styles:
 
 **Tips:**
 
-- Use `!important` to override Notion's styles
+- Use `!important` to override Notion's own styles
 - Notion uses `.dark` class for dark mode
 - Inspect your Notion page to find class names to target
+
+**Overriding Nooxy's own styles.** Nooxy injects its stylesheet after yours, so a
+rule with the same specificity loses even though yours appears first. Here
+`!important` is not enough on its own — you also have to be more specific.
+
+Nooxy hides Notion's top bar with `div.notion-topbar, div.notion-topbar-mobile`,
+so bringing it back means answering both, and `html body` is what wins the
+cascade:
+
+```css
+html body div.notion-topbar {
+  display: block !important;
+}
+
+/* Notion swaps in a different bar on small screens, and that one sets
+   display: flex inline — forcing block here would break its layout. */
+html body div.notion-topbar-mobile {
+  display: flex !important;
+}
+```
 
 #### `head.js` — Early JavaScript
 
