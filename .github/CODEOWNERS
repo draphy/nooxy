@@ -1,0 +1,20 @@
+# Code owners for nooxy.
+#
+# The `protect_branches` ruleset sets require_code_owner_review: true. Without
+# this file that rule is inert — GitHub asks for review from the owners of the
+# files changed, and with no owners declared, every PR satisfies it vacuously.
+# The rule reads as active in the settings UI while doing nothing.
+#
+# One line, not a list of paths. @draphy is currently the only account with
+# write access, so every path-specific rule would name the same owner and add
+# nothing but the chance of the catch-all and a path rule drifting apart. Split
+# it by path when there is a second maintainer to split it between.
+#
+# Outside contributors are deliberately not listed. A CODEOWNERS entry for an
+# account without write access is silently ignored by GitHub, so adding one
+# would look like coverage while providing none.
+#
+# Note this repository is user-owned rather than an organisation, so team
+# syntax (@org/team) is not available here — owners must be individual users.
+
+* @draphy
