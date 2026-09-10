@@ -15,8 +15,8 @@
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
 		"typescript": "^5.5.2",
-		"vitest": "~3.2.6",
-		"wrangler": "^4.59.1"
+		"vitest": "~5.0.0",
+		"wrangler": "^4.59.2"
 	},
 	"dependencies": {
 		"nooxy": "^2.0.0"
