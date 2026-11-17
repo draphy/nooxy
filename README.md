@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick Start</a> · <a href="#why-nooxy">Why Nooxy</a> · <a href="#features">Features</a> · <a href="#configuration-reference">Configuration</a> · <a href="#project-files">Customization</a> · <a href="#full-deployment-guides">Deployment Guides</a>
+  <a href="#quick-start">Quick Start</a> · <a href="#see-it-live">Showcase</a> · <a href="#why-nooxy">Why Nooxy</a> · <a href="#features">Features</a> · <a href="#configuration-reference">Configuration</a> · <a href="#project-files">Customization</a> · <a href="#full-deployment-guides">Deployment Guides</a>
 </p>
 
 ---
@@ -40,13 +40,41 @@ Notion Sites charges [$10/month per domain](https://www.notion.com/help/notion-s
 
 **Nooxy gives you everything. For free.**
 
-### See It Live
+## See It Live
 
 These sites run on Nooxy right now:
 
-- **[os.draphy.org](https://os.draphy.org)** — Life documented as a file system
-- **[draphy.org](https://draphy.org)** — Personal site
-- **[em-ucd.com](https://em-ucd.com)** — Portfolio
+<table>
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <sub><b>KNOWLEDGE BASE</b></sub><br><br>
+      <a href="https://os.draphy.org"><strong>os.draphy.org</strong></a><br>
+      <sub>Life documented as a file system</sub><br><br>
+      <a href="https://github.com/draphy" title="draphy on GitHub"><img src="https://wsrv.nl/?url=github.com/draphy.png&amp;w=96&amp;h=96&amp;fit=cover&amp;mask=circle&amp;output=png&amp;maxage=1d" width="20" height="20" align="middle" alt="draphy avatar"></a> <sub><a href="https://github.com/draphy">by @draphy</a></sub>
+    </td>
+    <td align="center" valign="top" width="50%">
+      <sub><b>PERSONAL SITE</b></sub><br><br>
+      <a href="https://draphy.org"><strong>draphy.org</strong></a><br>
+      <sub>Personal site</sub><br><br>
+      <a href="https://github.com/draphy" title="draphy on GitHub"><img src="https://wsrv.nl/?url=github.com/draphy.png&amp;w=96&amp;h=96&amp;fit=cover&amp;mask=circle&amp;output=png&amp;maxage=1d" width="20" height="20" align="middle" alt="draphy avatar"></a> <sub><a href="https://github.com/draphy">by @draphy</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <sub><b>PORTFOLIO</b></sub><br><br>
+      <a href="https://em-ucd.com"><strong>em-ucd.com</strong></a><br>
+      <sub>Portfolio</sub><br><br>
+      <a href="https://github.com/EA-Williams" title="EA-Williams on GitHub"><img src="https://wsrv.nl/?url=github.com/EA-Williams.png&amp;w=96&amp;h=96&amp;fit=cover&amp;mask=circle&amp;output=png&amp;maxage=1d" width="20" height="20" align="middle" alt="EA-Williams avatar"></a> <sub><a href="https://github.com/EA-Williams">by @EA-Williams</a></sub>
+    </td>
+    <td align="center" valign="top" width="50%">
+      <sub><b>FAN WIKI</b></sub><br><br>
+      <a href="https://expedition-33.pablogpz.me/music-wiki"><strong>expedition-33.pablogpz.me</strong></a><br>
+      <sub>A fan-made music wiki for Clair Obscur: Expedition 33</sub><br>
+      <sub><a href="https://expedition-33.pablogpz.me/music-wiki">English</a> · <a href="https://expedition-33.pablogpz.me/wiki-musical">Español</a></sub><br><br>
+      <a href="https://github.com/pablogpz" title="pablogpz on GitHub"><img src="https://wsrv.nl/?url=github.com/pablogpz.png&amp;w=96&amp;h=96&amp;fit=cover&amp;mask=circle&amp;output=png&amp;maxage=1d" width="20" height="20" align="middle" alt="pablogpz avatar"></a> <sub><a href="https://github.com/pablogpz">by @pablogpz</a></sub>
+    </td>
+  </tr>
+</table>
 
 View source, check the SEO tags, test the interactivity. It works.
 
